@@ -1,31 +1,38 @@
 import pyglet as pgl
 from game.player import Player
 from game.title import Title
-import resources
 
-
-def center_image(image):
-    """Sets an image's anchor point to its center"""
-    image.anchor_x = image.width // 2
-    image.anchor_y = image.height // 2
-
+framerate = 60.0
 
 game_window = pgl.window.Window()
 
 pgl.resource.path = ['resources']
 pgl.resource.reindex()
 
-player1 = Player((150, 50))
-test = Title("test title")
+main_batch = pgl.graphics.Batch()
+
+player1 = Player((150, 50), main_batch)
+test = Title("test title", main_batch)
+
+objects = [player1]
+
+
+def update(dt):
+    player1.acc_pos(1, 0)
+
+    for obj in objects:
+        obj.update(dt)
 
 
 @game_window.event
 def on_draw():
     game_window.clear()
 
-    test.draw()
-    player1.draw()
+    main_batch.draw()
 
 
 if __name__ == '__main__':
+    pgl.clock.schedule_interval(update, 1 / framerate)
     pgl.app.run()
+
+

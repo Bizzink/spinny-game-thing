@@ -1,0 +1,18 @@
+player:
+    physics, controls
+    collision detection
+
+title:
+    font
+    colour
+    size
+
+tiles:
+    collision
+    image
+    rotation
+
+pickups:
+    animation
+
+particles?
