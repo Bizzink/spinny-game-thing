@@ -14,7 +14,7 @@ main_batch = pgl.graphics.Batch()
 player1 = Player((150, 50), main_batch)
 game_window.push_handlers(player1.key_handler)
 
-test = Title("test title", main_batch)
+test = Title("test title", (200, 100), size = 40, colour = (200, 150, 255, 255), batch = main_batch)
 
 objects = [player1]
 

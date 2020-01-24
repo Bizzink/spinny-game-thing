@@ -1,11 +1,5 @@
 player:
-    physics, controls
     collision detection
-
-title:
-    font
-    colour
-    size
 
 tiles:
     collision
