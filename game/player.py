@@ -4,20 +4,21 @@ from math import sqrt, atan, cos, sin, pi
 
 
 class Player:
-    def __init__(self, pos, batch=None):
+    def __init__(self, pos, batch = None):
         self.x = pos[0]
         self.y = pos[1]
 
+        self._acc = 50
+        self._max_vel = 500
+        self._drag = 0.995
+        self._rot_acc = 0.8
+        self._max_rot_vel = 8
+        self._rot_drag = 0.95
+
         self.vel_x = 0
         self.vel_y = 0
-        self._max_vel = 150
-
-        self._accel = 1
-        self._drag = 0.95
-
         self.rot = 0
         self.vel_rot = 0
-        self._max_rot = 2
 
         self.key_handler = key.KeyStateHandler()
 
@@ -27,79 +28,90 @@ class Player:
         self._image.center_y = self._image.height // 2
         self._image.anchor_x = self._image.width // 2
         self._image.anchor_y = self._image.height // 2
-        self._sprite = pgl.sprite.Sprite(img=self._image, x=self.x, y=self.y, batch=batch)
+        self._sprite = pgl.sprite.Sprite(img = self._image, x = self.x, y = self.y, batch = batch)
         self._sprite.scale = 0.1
 
-    def draw(self):
-        self._sprite.draw()
-
     def update(self, dt):
+        #  key handling
         if self.key_handler[key.W]:
-            self.__acc_relative__(10, 0)
+            self.__acc_relative__(self._acc, 0)
         if self.key_handler[key.S]:
-            self.__acc_relative__(-10, 0)
-
+            self.__acc_relative__(-self._acc, 0)
         if self.key_handler[key.A]:
-            self.__acc_relative__(0, -10)
+            self.__acc_rot__(-self._rot_acc)
         if self.key_handler[key.D]:
-            self.__acc_relative__(0, 10)
+            self.__acc_rot__(self._rot_acc)
 
-        if self.key_handler[key.LEFT]:
-            self.__acc_rot__(-0.2)
-        if self.key_handler[key.RIGHT]:
-            self.__acc_rot__(0.2)
-
+        #  physics update
         self.x += self.vel_x * dt
         self.y += self.vel_y * dt
         self.rot += self.vel_rot
+        self.__drag__()
 
+        #  sprite update
         self._sprite.x = self.x
         self._sprite.y = self.y
         self._sprite.rotation = self.rot
 
-        self.__drag__()
+    def debug_draw(self):
+        """draw rotation and velocity vector for debug"""
+        pgl.graphics.draw(2, pgl.gl.GL_LINES,
+                          ('v2f', (self.x, self.y, self.x + self.vel_x * 0.5, self.y + self.vel_y * 0.5)),
+                          ('c3B', (255, 0, 0, 100, 0, 0)))
+
+        pgl.graphics.draw(2, pgl.gl.GL_LINES, ('v2f', (
+            self.x, self.y, self.x + (cos((self.rot - 90) * pi / 180) * 100),
+            self.y + (sin((self.rot - 90) * pi / 180) * -100))), ('c3B', (0, 255, 0, 0, 100, 0)))
 
     def acc_absolute(self, x, y):
-        """accelerate absolute motion of player, cap at max_vel"""
+        """accelerate absolute motion of player"""
         self.vel_x += x
         self.vel_y += y
 
-        if self.vel_y > self._max_vel: self.vel_y = self._max_vel
-        if self.vel_y < -self._max_vel: self.vel_y = -self._max_vel
+        self.__limit_velocity__()
 
-    def __acc_relative__(self, forward_back, left_right):
-        """accelerate motion of player relative to direction it is facing, cap at max_vel"""
-        self.vel_x += cos((self.rot + 90) * pi / 180) * -forward_back * self._accel
-        self.vel_y += sin((self.rot + 90) * pi / 180) * forward_back * self._accel
-
-        self.vel_x += cos(self.rot * pi / 180) * left_right * self._accel
-        self.vel_y += sin(self.rot * pi / 180) * -left_right * self._accel
-
+    def __limit_velocity__(self):
+        """limit velocity to max_vel"""
         vel = sqrt(self.vel_x ** 2 + self.vel_y ** 2)
-        if vel > self._max_vel:
-            vel_ang = atan(self.vel_y / self.vel_x)
 
+        if vel > self._max_vel:
+            if self.vel_x == 0:
+                vel_ang = -pi / 2
+            else:
+                vel_ang = atan(self.vel_y / self.vel_x)
+
+            #  add 180 degrees if vel_x is negative
             if self.vel_x < 0:
                 vel_ang += pi
 
             self.vel_x = cos(vel_ang) * self._max_vel
             self.vel_y = sin(vel_ang) * self._max_vel
 
+    def __acc_relative__(self, forward_back, left_right):
+        """accelerate motion of player relative to direction it is facing, cap at max_vel"""
+        #  forward / backward acceleration
+        self.vel_x += cos((self.rot + 90) * pi / 180) * -forward_back
+        self.vel_y += sin((self.rot + 90) * pi / 180) * forward_back
+        #  left / right acceleration
+        self.vel_x += cos(self.rot * pi / 180) * left_right
+        self.vel_y += sin(self.rot * pi / 180) * -left_right
+
+        self.__limit_velocity__()
+
     def __acc_rot__(self, a):
         """accelerate rotation of player, cap at max_rot"""
         self.vel_rot += a
 
-        if self.vel_rot > self._max_rot: self.vel_rot = self._max_rot
-        if self.vel_rot < -self._max_rot: self.vel_rot = -self._max_rot
+        #  limit rotational velocity to max_rot_val
+        if self.vel_rot > self._max_rot_vel: self.vel_rot = self._max_rot_vel
+        if self.vel_rot < -self._max_rot_vel: self.vel_rot = -self._max_rot_vel
 
     def __drag__(self):
         """apply drag to motion of player, set motion to 0 if it is too low"""
         self.vel_x *= self._drag
         self.vel_y *= self._drag
-        self.vel_rot *= self._drag
+        self.vel_rot *= self._rot_drag
 
         if -0.1 < self.vel_x < 0.1: self.vel_x = 0
-
         if -0.1 < self.vel_y < 0.1: self.vel_y = 0
-
         if -0.1 < self.vel_rot < 0.1: self.vel_rot = 0
