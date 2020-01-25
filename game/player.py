@@ -10,7 +10,7 @@ class Player:
 
         self._acc = 50
         self._max_vel = 500
-        self._drag = 0.995
+        self._drag = 0.95
         self._rot_acc = 0.8
         self._max_rot_vel = 8
         self._rot_drag = 0.95
@@ -30,6 +30,9 @@ class Player:
         self._image.anchor_y = self._image.height // 2
         self._sprite = pgl.sprite.Sprite(img = self._image, x = self.x, y = self.y, batch = batch)
         self._sprite.scale = 0.1
+
+    def delete(self):
+        self._sprite.delete()
 
     def update(self, dt):
         #  key handling

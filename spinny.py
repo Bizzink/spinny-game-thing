@@ -14,16 +14,17 @@ main_batch = pgl.graphics.Batch()
 player1 = Player((150, 50), main_batch)
 game_window.push_handlers(player1.key_handler)
 
-test = Title("test title", (200, 100), size = 40, colour = (200, 150, 255, 255), batch = main_batch)
+test = Title("penis music", (200, 100), size = 40, colour = (200, 150, 255, 255), batch = main_batch)
+test = Title("pefc", (900, 170), size = 40, colour = (200, 150, 255, 255), batch = main_batch)
 
 objects = [player1]
 
 pgl.gl.glLineWidth(1)
-debug = False
+debug = True
 
 
 def update(dt):
-    player1.acc_absolute(0, -20)
+    #  player1.acc_absolute(0, -20)
     for obj in objects:
         obj.update(dt)
 
