@@ -23,10 +23,25 @@ pgl.gl.glLineWidth(1)
 debug = True
 
 
+def screen_wrap(obj):
+    dist = 5
+
+    if obj.x < 0 - dist:
+        obj.x = game_window.width
+    if obj.x > game_window.width + dist:
+        obj.x = 0
+    if obj.y < 0 - dist:
+        obj.y = game_window.height
+    if obj.y > game_window.height + dist:
+        obj.y = 0
+
+
 def update(dt):
-    #  player1.acc_absolute(0, -20)
+    player1.acc_absolute(0, -20)
     for obj in objects:
         obj.update(dt)
+
+    screen_wrap(player1)
 
 
 @game_window.event

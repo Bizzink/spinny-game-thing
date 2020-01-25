@@ -4,13 +4,15 @@ from math import sqrt, atan, cos, sin, pi
 
 
 class Player:
-    def __init__(self, pos, batch = None):
+    def __init__(self, pos, batch=None):
         self.x = pos[0]
         self.y = pos[1]
 
         self._acc = 50
         self._max_vel = 500
-        self._drag = 0.95
+        self._max_x_val = 450
+        self._max_y_val = 800
+        self._drag = 0.995
         self._rot_acc = 0.8
         self._max_rot_vel = 8
         self._rot_drag = 0.95
@@ -28,7 +30,7 @@ class Player:
         self._image.center_y = self._image.height // 2
         self._image.anchor_x = self._image.width // 2
         self._image.anchor_y = self._image.height // 2
-        self._sprite = pgl.sprite.Sprite(img = self._image, x = self.x, y = self.y, batch = batch)
+        self._sprite = pgl.sprite.Sprite(img=self._image, x=self.x, y=self.y, batch=batch)
         self._sprite.scale = 0.1
 
     def delete(self):
@@ -71,24 +73,37 @@ class Player:
         self.vel_x += x
         self.vel_y += y
 
-        self.__limit_velocity__()
+        self.__limit_velocity__(mode = 'absolute')
 
-    def __limit_velocity__(self):
+    def __limit_velocity__(self, mode='absolute'):
         """limit velocity to max_vel"""
-        vel = sqrt(self.vel_x ** 2 + self.vel_y ** 2)
+        #  velocity per direction
+        if mode == 'absolute':
+            if self.vel_x > self._max_x_val:
+                self.vel_x = self._max_x_val
+            if self.vel_y > self._max_y_val:
+                self.vel_y = self._max_y_val
+            if self.vel_x < -self._max_x_val:
+                self.vel_x = -self._max_x_val
+            if self.vel_y < -self._max_y_val:
+                self.vel_y = -self._max_y_val
 
-        if vel > self._max_vel:
-            if self.vel_x == 0:
-                vel_ang = -pi / 2
-            else:
-                vel_ang = atan(self.vel_y / self.vel_x)
+        #  velocity vector length max
+        if mode == 'total':
+            vel = sqrt(self.vel_x ** 2 + self.vel_y ** 2)
 
-            #  add 180 degrees if vel_x is negative
-            if self.vel_x < 0:
-                vel_ang += pi
+            if vel > self._max_vel:
+                if self.vel_x == 0:
+                    vel_ang = -pi / 2
+                else:
+                    vel_ang = atan(self.vel_y / self.vel_x)
 
-            self.vel_x = cos(vel_ang) * self._max_vel
-            self.vel_y = sin(vel_ang) * self._max_vel
+                #  add 180 degrees if vel_x is negative
+                if self.vel_x < 0:
+                    vel_ang += pi
+
+                self.vel_x = cos(vel_ang) * self._max_vel
+                self.vel_y = sin(vel_ang) * self._max_vel
 
     def __acc_relative__(self, forward_back, left_right):
         """accelerate motion of player relative to direction it is facing, cap at max_vel"""
