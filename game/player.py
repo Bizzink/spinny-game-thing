@@ -4,7 +4,7 @@ from math import sqrt, atan, cos, sin, pi
 
 
 class Player:
-    def __init__(self, pos, batch=None):
+    def __init__(self, pos, batch=None, group=None):
         self.x = pos[0]
         self.y = pos[1]
 
@@ -30,8 +30,12 @@ class Player:
         self._image.center_y = self._image.height // 2
         self._image.anchor_x = self._image.width // 2
         self._image.anchor_y = self._image.height // 2
-        self._sprite = pgl.sprite.Sprite(img=self._image, x=self.x, y=self.y, batch=batch)
+        self._sprite = pgl.sprite.Sprite(img=self._image, x=self.x, y=self.y, batch=batch, group=group)
         self._sprite.scale = 0.1
+
+        self._debug = False
+        self._debug_direction = None
+        self._debug_velocity = None
 
     def delete(self):
         self._sprite.delete()
@@ -58,15 +62,31 @@ class Player:
         self._sprite.y = self.y
         self._sprite.rotation = self.rot
 
-    def debug_draw(self):
-        """draw rotation and velocity vector for debug"""
-        pgl.graphics.draw(2, pgl.gl.GL_LINES,
-                          ('v2f', (self.x, self.y, self.x + self.vel_x * 0.5, self.y + self.vel_y * 0.5)),
-                          ('c3B', (255, 0, 0, 100, 0, 0)))
+        if self._debug:
+            self._debug_direction.vertices = [self.x, self.y, self.x + (cos((self.rot - 90) * pi / 180) * 100), self.y + (sin((self.rot - 90) * pi / 180) * -100)]
+            self._debug_velocity.vertices = [self.x, self.y, self.x + self.vel_x * 0.5, self.y + self.vel_y * 0.5]
 
-        pgl.graphics.draw(2, pgl.gl.GL_LINES, ('v2f', (
+    def debug_enable(self, batch, group=None):
+        """enable drawing of rotation and velocity vectors"""
+        self._debug = True
+        self._debug_direction = batch.add(2, pgl.gl.GL_LINES, group, ('v2f/stream', (
             self.x, self.y, self.x + (cos((self.rot - 90) * pi / 180) * 100),
-            self.y + (sin((self.rot - 90) * pi / 180) * -100))), ('c3B', (0, 255, 0, 0, 100, 0)))
+            self.y + (sin((self.rot - 90) * pi / 180) * -100))), ('c3B/static', (0, 255, 0, 0, 100, 0)))
+        self._debug_velocity = batch.add(2, pgl.gl.GL_LINES, group, ('v2f/stream', (
+            self.x, self.y, self.x + self.vel_x * 0.5, self.y + self.vel_y * 0.5)), ('c3B/static', (255, 0, 0, 100, 0, 0)))
+
+    def debug_disable(self):
+        self._debug = False
+        self._debug_direction.delete()
+        self._debug_velocity.delete()
+        self._debug_direction = None
+        self._debug_velocity = None
+
+    def debug_toggle(self, batch, group):
+        if self._debug:
+            self.debug_disable()
+        else:
+            self.debug_enable(batch, group)
 
     def acc_absolute(self, x, y):
         """accelerate absolute motion of player"""
