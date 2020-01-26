@@ -24,7 +24,7 @@ debug = True
 
 
 def screen_wrap(obj):
-    dist = 5
+    dist = 300
 
     if obj.x < 0 - dist:
         obj.x = game_window.width
