@@ -3,7 +3,6 @@ from pyglet.window import key
 from game.player import Player
 from game.title import Title
 from game.tile import *
-import math
 
 framerate = 60.0
 
@@ -23,24 +22,21 @@ player_group = pgl.graphics.OrderedGroup(2)
 debug_group = pgl.graphics.OrderedGroup(3)
 text_group = pgl.graphics.OrderedGroup(0)
 
-player1 = Player((150, 50), main_batch, player_group)
+player1 = Player((150, 50), [[-5, -15], [-5, 15], [5, 15], [5, -15]], main_batch, player_group)
 game_window.push_handlers(player1.key_handler)
 
-title_test = Title("debug off", (100, 50), batch=main_batch, group=text_group)
-
-block = TileAll((200, 300), 0, batch = main_batch, group = tile_group)
-block2 = TilePipe((200, 250), 0, batch=main_batch,group=tile_group)
-block3 = TileEnd((300, 250), 0, batch=main_batch,group=tile_group)
+title_test = Title("debug off", (700, 50), size = 20, batch=main_batch, group=text_group)
+block = TileAll((300, 100), 0, main_batch, tile_group)
 
 objects = [player1]
-tiles = [block, block2, block3]
+tiles = [block]
 debug = False
 
 pgl.gl.glLineWidth(1)
 
 
 def screen_wrap(obj):
-    dist = 300
+    dist = 5
 
     if obj.x < 0 - dist:
         obj.x = game_window.width
