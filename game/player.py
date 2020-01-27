@@ -1,6 +1,7 @@
 import pyglet as pgl
 from pyglet.window import key
 from math import sqrt, atan, cos, sin, pi
+from .rect import Rect
 
 
 class Player:
@@ -8,10 +9,7 @@ class Player:
         self.x = pos[0]
         self.y = pos[1]
 
-        self._hitbox = [[point[0] + self.x, point[1] + self.y] for point in hitbox]
-        self._hitbox_ref = hitbox
-        self._checkbox = None
-        self.__update_checkbox__()
+        self.hitbox = Rect(pos, hitbox)
 
         self._acc = 50
         self._max_vel = 500
@@ -41,7 +39,6 @@ class Player:
         self._debug = False
         self._debug_direction = None
         self._debug_velocity = None
-        self._debug_vertex_list = None
 
     def delete(self):
         self._sprite.delete()
@@ -64,28 +61,18 @@ class Player:
         self.rot += self.vel_rot * dt
         self.__drag__()
 
+        self.hitbox.update(self.x, self.y, self.rot)
+
         #  sprite update
         self._sprite.x = self.x
         self._sprite.y = self.y
         self._sprite.rotation = self.rot
-
-        self.__update_hitbox__()
-        self.__update_checkbox__()
 
         #  debug updating
         if self._debug:
             self._debug_direction.vertices = [self.x, self.y, self.x + (cos((self.rot - 90) * pi / 180) * 100),
                                               self.y + (sin((self.rot - 90) * pi / 180) * -100)]
             self._debug_velocity.vertices = [self.x, self.y, self.x + self.vel_x * 0.5, self.y + self.vel_y * 0.5]
-
-            for i in range(len(self._hitbox)):
-                self._debug_vertex_list[i].vertices = [self._hitbox[i - 1][0], self._hitbox[i - 1][1],
-                                                       self._hitbox[i][0], self._hitbox[i][1]]
-
-            for i in range(len(self._checkbox)):
-                j = i + len(self._hitbox)
-                self._debug_vertex_list[j].vertices = [self._checkbox[i - 1][0], self._checkbox[i - 1][1],
-                                                       self._checkbox[i][0], self._checkbox[i][1]]
 
     def debug_enable(self, batch, group=None):
         """enable drawing of rotation and velocity vectors"""
@@ -99,24 +86,7 @@ class Player:
             self.x, self.y, self.x + self.vel_x * 0.5, self.y + self.vel_y * 0.5)),
                                          ('c3B/static', (255, 0, 0, 100, 0, 0)))
 
-        #  Same code from tile class to draw hitbox
-        self._debug_vertex_list = []
-
-        for i in range(len(self._hitbox)):
-            vertex = batch.add(2, pgl.gl.GL_LINES, group, ('v2f', (self._hitbox[i - 1][0],
-                                                                   self._hitbox[i - 1][1],
-                                                                   self._hitbox[i][0],
-                                                                   self._hitbox[i][1])),
-                               ('c3B', (50, 50, 255, 50, 50, 255)))
-            self._debug_vertex_list.append(vertex)
-
-        for i in range(len(self._checkbox)):
-            vertex = batch.add(2, pgl.gl.GL_LINES, group, ('v2f', ([self._checkbox[i - 1][0],
-                                                                    self._checkbox[i - 1][1],
-                                                                    self._checkbox[i][0],
-                                                                    self._checkbox[i][1]])),
-                               ('c3B', (50, 255, 255, 50, 255, 255)))
-            self._debug_vertex_list.append(vertex)
+        self.hitbox.debug_enable(batch, group)
 
     def debug_disable(self):
         """remove debug visuals from batch"""
@@ -124,9 +94,7 @@ class Player:
 
         self._debug_direction.delete()
         self._debug_velocity.delete()
-
-        for vertex in self._debug_vertex_list:
-            vertex.delete()
+        self.hitbox.debug_disable()
 
     def debug_toggle(self, batch, group):
         """toggle debug on or off"""
@@ -200,26 +168,3 @@ class Player:
 
                 self.vel_x = cos(vel_ang) * self._max_vel
                 self.vel_y = sin(vel_ang) * self._max_vel
-
-    def __update_hitbox__(self):
-        """rotate hitbox points around origin
-        code from https://stackoverflow.com/questions/2259476/rotating-a-point-about-another-point-2d"""
-        points = [point.copy() for point in self._hitbox_ref.copy()]
-
-        #  for some reason, self.rot needs to be negative, not sure why
-        c, s = cos(-self.rot * pi / 180), sin(-self.rot * pi / 180)
-
-        self._hitbox = [[c * point[0] - s * point[1] + self.x, s * point[0] + c * point[1] + self.y] for point in
-                        points]
-
-    def __update_checkbox__(self):
-        """update checkbox (bounding box of hitbox)"""
-        hitbox_x = [point[0] for point in self._hitbox]
-        hitbox_y = [point[1] for point in self._hitbox]
-
-        min_x = min(hitbox_x)
-        max_x = max(hitbox_x)
-        min_y = min(hitbox_y)
-        max_y = max(hitbox_y)
-
-        self._checkbox = [[min_x, min_y], [min_x, max_y], [max_x, max_y], [max_x, min_y]]
