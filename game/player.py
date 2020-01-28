@@ -40,6 +40,8 @@ class Player:
         self._debug_direction = None
         self._debug_velocity = None
 
+        self.landed = False
+
     def delete(self):
         self._sprite.delete()
         self.debug_disable()
@@ -47,13 +49,15 @@ class Player:
     def update(self, dt):
         #  key handling
         if self.key_handler[key.W]:
-            self.__acc_relative__(self._acc, 0)
+            self.accelerate(0, self._acc, mode = "relative")
         if self.key_handler[key.S]:
-            self.__acc_relative__(-self._acc, 0)
+            self.accelerate(0, -self._acc, mode = "relative")
         if self.key_handler[key.A]:
             self.__acc_rot__(-self._rot_acc)
         if self.key_handler[key.D]:
             self.__acc_rot__(self._rot_acc)
+
+        if self.landed: self.__landed__()
 
         #  physics update
         self.x += self.vel_x * dt
@@ -73,6 +77,13 @@ class Player:
             self._debug_direction.vertices = [self.x, self.y, self.x + (cos((self.rot - 90) * pi / 180) * 100),
                                               self.y + (sin((self.rot - 90) * pi / 180) * -100)]
             self._debug_velocity.vertices = [self.x, self.y, self.x + self.vel_x * 0.5, self.y + self.vel_y * 0.5]
+
+    def __landed__(self):
+        if self.vel_y < 0:
+            self.vel_y = 0
+
+        self.vel_x *= 0.9
+        self.vel_rot *= 0.9
 
     def debug_enable(self, batch, group=None):
         """enable drawing of rotation and velocity vectors"""
@@ -103,23 +114,25 @@ class Player:
         else:
             self.debug_enable(batch, group)
 
-    def acc_absolute(self, x, y):
-        """accelerate absolute motion of player"""
-        self.vel_x += x
-        self.vel_y += y
+    def accelerate(self, x, y, mode = "absolute"):
+        if mode == "absolute":
+            """accelerate absolute motion of player"""
+            self.vel_x += x
+            self.vel_y += y
 
-        self.__limit_velocity__(mode='absolute')
+            self.__limit_velocity__(mode = 'absolute')
+        elif mode == "relative":
+            """accelerate motion of player relative to direction it is facing, cap at max_vel"""
+            #  forward / backward acceleration
+            self.vel_x += cos((self.rot + 90) * pi / 180) * -y
+            self.vel_y += sin((self.rot + 90) * pi / 180) * y
+            #  left / right acceleration
+            self.vel_x += cos(self.rot * pi / 180) * x
+            self.vel_y += sin(self.rot * pi / 180) * -x
 
-    def __acc_relative__(self, forward_back, left_right):
-        """accelerate motion of player relative to direction it is facing, cap at max_vel"""
-        #  forward / backward acceleration
-        self.vel_x += cos((self.rot + 90) * pi / 180) * -forward_back
-        self.vel_y += sin((self.rot + 90) * pi / 180) * forward_back
-        #  left / right acceleration
-        self.vel_x += cos(self.rot * pi / 180) * left_right
-        self.vel_y += sin(self.rot * pi / 180) * -left_right
-
-        self.__limit_velocity__()
+            self.__limit_velocity__()
+        else:
+            raise ValueError("Invalid mode : {}".format(mode))
 
     def __acc_rot__(self, a):
         """accelerate rotation of player, cap at max_rot"""

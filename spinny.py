@@ -26,10 +26,9 @@ player1 = Player((150, 50), [[-5, -15], [-5, 15], [5, 15], [5, -15]], main_batch
 game_window.push_handlers(player1.key_handler)
 
 title_test = Title("debug off", (700, 50), size = 20, batch=main_batch, group=text_group)
-block = TileAll((300, 100), 30, main_batch, tile_group)
 
 objects = [player1]
-tiles = [block]
+tiles = [TilePipe((i * 51 + 50, 300), 0, main_batch, tile_group) for i in range(8)]
 debug = False
 
 pgl.gl.glLineWidth(2)
@@ -68,15 +67,24 @@ def update(dt):
         if key.F3 in prev_keys:
             prev_keys.remove(key.F3)
 
-    player1.acc_absolute(0, -20)
+    player1.accelerate(0, -20)
 
-    if debug and True:
-        if player1.hitbox.contacts(block.hitbox):
-            player1.hitbox.colour([50, 255, 50])
-            block.hitbox.colour([50, 255, 50])
+    landed = False
+
+    for tile in tiles:
+        if player1.hitbox.contacts(tile.hitbox):
+            landed = True
+
+            if debug:
+                player1.hitbox.colour([50, 255, 50])
+                tile.hitbox.colour([50, 255, 50])
+
         else:
-            player1.hitbox.colour([50, 50, 255])
-            block.hitbox.colour([50, 50, 255])
+            if debug:
+                player1.hitbox.colour([50, 50, 255])
+                tile.hitbox.colour([50, 50, 255])
+
+    player1.landed = landed
 
     for obj in objects:
 
