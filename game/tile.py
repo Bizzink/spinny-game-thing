@@ -9,6 +9,7 @@ class Tile:
         self.rot = rot
 
         self.hitbox = Rect(pos, hitbox)
+        self.hitbox.update(self.x, self.y, self.rot)
 
         #  sprite setup
         self._image = pgl.resource.image(image)

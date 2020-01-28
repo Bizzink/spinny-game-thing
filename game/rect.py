@@ -23,6 +23,7 @@ class Rect:
         self._debug_vertex_list = []
 
     def update(self, x, y, rot):
+        """update position and rotation"""
         self.__update_position__(x, y, rot)
         self.__update_checkbox__()
 
@@ -37,6 +38,7 @@ class Rect:
                                                        self._checkbox[i][0], self._checkbox[i][1]]
 
     def contacts(self, rect):
+        """check if self contacts other rect"""
         return self.__in_range__(rect)
 
     def debug_enable(self, batch, group=None):
@@ -74,6 +76,7 @@ class Rect:
             self.debug_enable(batch, group)
 
     def checkbox_colour(self, colour):
+        """change colour of checkbox (for debug)"""
         colour.extend(colour)
 
         for i in range(len(self._checkbox)):
@@ -81,8 +84,9 @@ class Rect:
             self._debug_vertex_list[j].colors = colour
 
     def __update_position__(self, x, y, rot):
-        """rotate hitbox points around origin
-        method from https://stackoverflow.com/questions/2259476/rotating-a-point-about-another-point-2d"""
+        """move and rotate to specified position"""
+        # rotate hitbox points around origin
+        # method from https://stackoverflow.com/questions/2259476/rotating-a-point-about-another-point-2d
         self.x = x
         self.y = y
         self.rot = rot

@@ -68,15 +68,15 @@ def update(dt):
         if key.F3 in prev_keys:
             prev_keys.remove(key.F3)
 
-    player1.acc_absolute(0, -2)
+    player1.acc_absolute(0, -20)
 
     if debug:
         if player1.hitbox.contacts(block.hitbox):
             player1.hitbox.checkbox_colour([50, 255, 50])
             block.hitbox.checkbox_colour([50, 255, 50])
         else:
-            player1.hitbox.checkbox_colour([50, 50, 255])
-            block.hitbox.checkbox_colour([50, 50, 255])
+            player1.hitbox.checkbox_colour([50, 255, 255])
+            block.hitbox.checkbox_colour([50, 255, 255])
 
     for obj in objects:
 
