@@ -26,13 +26,13 @@ player1 = Player((150, 50), [[-5, -15], [-5, 15], [5, 15], [5, -15]], main_batch
 game_window.push_handlers(player1.key_handler)
 
 title_test = Title("debug off", (700, 50), size = 20, batch=main_batch, group=text_group)
-block = TileAll((300, 100), 0, main_batch, tile_group)
+block = TileAll((300, 100), 30, main_batch, tile_group)
 
 objects = [player1]
 tiles = [block]
 debug = False
 
-pgl.gl.glLineWidth(1)
+pgl.gl.glLineWidth(2)
 
 
 def screen_wrap(obj):
@@ -70,13 +70,13 @@ def update(dt):
 
     player1.acc_absolute(0, -20)
 
-    if debug:
+    if debug and True:
         if player1.hitbox.contacts(block.hitbox):
-            player1.hitbox.checkbox_colour([50, 255, 50])
-            block.hitbox.checkbox_colour([50, 255, 50])
+            player1.hitbox.colour([50, 255, 50])
+            block.hitbox.colour([50, 255, 50])
         else:
-            player1.hitbox.checkbox_colour([50, 255, 255])
-            block.hitbox.checkbox_colour([50, 255, 255])
+            player1.hitbox.colour([50, 50, 255])
+            block.hitbox.colour([50, 50, 255])
 
     for obj in objects:
 

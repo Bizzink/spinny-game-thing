@@ -39,11 +39,25 @@ class Rect:
 
     def contacts(self, rect):
         """check if self contacts other rect"""
-        return self.__in_range__(rect)
+        #  check if rects are in range
+        if self.__in_range__(rect):
+            #  check each side of rect to see if it intersects
+            points = rect.get_points()
+
+            for i in range(len(points)):
+                line = [points[i - 1], points[i]]
+
+                if self.__intersects__(line):
+                    return True
+
+            return False
+        else:
+            return False
 
     def debug_enable(self, batch, group=None):
         """enable drawing of rotation and velocity vectors"""
         self._debug = True
+        self._debug_vertex_list = []
 
         for i in range(len(self._points)):
             vertex = batch.add(2, pgl.gl.GL_LINES, group, ('v2f', (self._points[i - 1][0],
@@ -68,6 +82,8 @@ class Rect:
         for vertex in self._debug_vertex_list:
             vertex.delete()
 
+        self._debug_vertex_list = None
+
     def debug_toggle(self, batch, group):
         """toggle debug on or off"""
         if self._debug:
@@ -75,13 +91,18 @@ class Rect:
         else:
             self.debug_enable(batch, group)
 
-    def checkbox_colour(self, colour):
+    def colour(self, colour, side=-1):
         """change colour of checkbox (for debug)"""
         colour.extend(colour)
 
-        for i in range(len(self._checkbox)):
-            j = i + len(self._points)
-            self._debug_vertex_list[j].colors = colour
+        if side == -1:
+            for i in range(len(self._points)):
+                self._debug_vertex_list[i].colors = colour
+        else:
+            self._debug_vertex_list[side].colors = colour
+
+    def get_points(self):
+        return [point.copy() for point in self._points.copy()]
 
     def __update_position__(self, x, y, rot):
         """move and rotate to specified position"""
@@ -150,3 +171,22 @@ class Rect:
             return False
         else:
             return True
+
+    def __intersects__(self, line):
+        """check if 2 line segments intersect.
+        algorithm from https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/"""
+        #  checks if 3 points are in an counterclockwise (ccw) configuration
+        def ccw(point1, point2, point3):
+            return (point3[1] - point1[1]) * (point2[0] - point1[0]) > (point2[1] - point1[1]) * (point3[0] - point1[0])
+
+        point_a = line[0]
+        point_b = line[1]
+
+        #  check to see if any line in self intersects with line
+        for i in range(len(self._points)):
+            point_c = self._points[i - 1]
+            point_d = self._points[i]
+
+            if ccw(point_a, point_c, point_d) != ccw(point_b, point_c, point_d) and \
+                    ccw(point_a, point_b, point_c) != ccw(point_a, point_b, point_d):
+                return True
