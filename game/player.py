@@ -85,6 +85,9 @@ class Player:
         self.vel_x *= 0.9
         self.vel_rot *= 0.9
 
+    def slide(self, line):
+        angle = atan()
+
     def debug_enable(self, batch, group=None):
         """enable drawing of rotation and velocity vectors"""
         self._debug = True

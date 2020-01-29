@@ -2,22 +2,38 @@ import pyglet as pgl
 from math import cos, sin, pi
 
 
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __str__(self):
+        return "Point ({}, {})".format(self.x, self.y)
+
+    def __eq__(self, other):
+        if isinstance(other, Point):
+            if other.x == self.x and other.y == self.y:
+                return True
+
+        return False
+
+    def set_pos(self, x, y):
+        self.x = x
+        self.y = y
+
+
 class Rect:
     def __init__(self, pos, points):
         self.x = pos[0]
         self.y = pos[1]
         self.rot = 0
 
-        self._points = [[point[0] + self.x, point[1] + self.y] for point in points]
-        self._points_ref = points
+        self._points = [Point(point[0] + self.x, point[1] + self.y) for point in points]
+        self._points_ref = [Point(point[0], point[1]) for point in points]
 
         self._checkbox = None
         self.checkbox_sides = {}
-        self._checkbox_area = 0
         self.__update_checkbox__()
-
-        self._area = 0
-        self.__get__area__()
 
         self._debug = False
         self._debug_vertex_list = []
@@ -29,13 +45,13 @@ class Rect:
 
         if self._debug:
             for i in range(len(self._points)):
-                self._debug_vertex_list[i].vertices = [self._points[i - 1][0], self._points[i - 1][1],
-                                                       self._points[i][0], self._points[i][1]]
+                self._debug_vertex_list[i].vertices = [self._points[i - 1].x, self._points[i - 1].y,
+                                                       self._points[i].x, self._points[i].y]
 
             for i in range(len(self._checkbox)):
                 j = i + len(self._points)
-                self._debug_vertex_list[j].vertices = [self._checkbox[i - 1][0], self._checkbox[i - 1][1],
-                                                       self._checkbox[i][0], self._checkbox[i][1]]
+                self._debug_vertex_list[j].vertices = [self._checkbox[i - 1].x, self._checkbox[i - 1].y,
+                                                       self._checkbox[i].x, self._checkbox[i].y]
 
     def contacts(self, rect):
         """check if self contacts other rect"""
@@ -54,24 +70,24 @@ class Rect:
         else:
             return False
 
-    def debug_enable(self, batch, group=None):
+    def debug_enable(self, batch, group = None):
         """enable drawing of rotation and velocity vectors"""
         self._debug = True
         self._debug_vertex_list = []
 
         for i in range(len(self._points)):
-            vertex = batch.add(2, pgl.gl.GL_LINES, group, ('v2f', (self._points[i - 1][0],
-                                                                   self._points[i - 1][1],
-                                                                   self._points[i][0],
-                                                                   self._points[i][1])),
+            vertex = batch.add(2, pgl.gl.GL_LINES, group, ('v2f', (self._points[i - 1].x,
+                                                                   self._points[i - 1].y,
+                                                                   self._points[i].x,
+                                                                   self._points[i].y)),
                                ('c3B', (50, 50, 255, 50, 50, 255)))
             self._debug_vertex_list.append(vertex)
 
         for i in range(len(self._checkbox)):
-            vertex = batch.add(2, pgl.gl.GL_LINES, group, ('v2f', ([self._checkbox[i - 1][0],
-                                                                    self._checkbox[i - 1][1],
-                                                                    self._checkbox[i][0],
-                                                                    self._checkbox[i][1]])),
+            vertex = batch.add(2, pgl.gl.GL_LINES, group, ('v2f', ([self._checkbox[i - 1].x,
+                                                                    self._checkbox[i - 1].y,
+                                                                    self._checkbox[i].x,
+                                                                    self._checkbox[i].y])),
                                ('c3B', (50, 255, 255, 50, 255, 255)))
             self._debug_vertex_list.append(vertex)
 
@@ -93,16 +109,17 @@ class Rect:
 
     def colour(self, colour, side=-1):
         """change colour of checkbox (for debug)"""
-        colour.extend(colour)
+        if self._debug:
+            colour.extend(colour)
 
-        if side == -1:
-            for i in range(len(self._points)):
-                self._debug_vertex_list[i].colors = colour
-        else:
-            self._debug_vertex_list[side].colors = colour
+            if side == -1:
+                for i in range(len(self._points)):
+                    self._debug_vertex_list[i].colors = colour
+            else:
+                self._debug_vertex_list[side].colors = colour
 
     def get_points(self):
-        return [point.copy() for point in self._points.copy()]
+        return self._points.copy()
 
     def __update_position__(self, x, y, rot):
         """move and rotate to specified position"""
@@ -112,55 +129,31 @@ class Rect:
         self.y = y
         self.rot = rot
 
-        points = [point.copy() for point in self._points_ref.copy()]
+        points = self._points_ref.copy()
 
         #  for some reason, self.rot needs to be negative, not sure why
         c, s = cos(-self.rot * pi / 180), sin(-self.rot * pi / 180)
 
-        self._points = [[c * point[0] - s * point[1] + self.x, s * point[0] + c * point[1] + self.y] for point in
+        self._points = [Point(c * point.x - s * point.y + self.x, s * point.x + c * point.y + self.y) for point in
                         points]
 
     def __update_checkbox__(self):
         """update checkbox (bounding box of hitbox)"""
         #  Update box
-        rect_x = [point[0] for point in self._points]
-        rect_y = [point[1] for point in self._points]
+        rect_x = [point.x for point in self._points]
+        rect_y = [point.y for point in self._points]
 
         min_x = min(rect_x)
         max_x = max(rect_x)
         min_y = min(rect_y)
         max_y = max(rect_y)
 
-        self._checkbox = [[min_x, min_y], [min_x, max_y], [max_x, max_y], [max_x, min_y]]
+        self._checkbox = [Point(min_x, min_y), Point(min_x, max_y), Point(max_x, max_y), Point(max_x, min_y)]
 
         self.checkbox_sides["min_x"] = min_x
         self.checkbox_sides["max_x"] = max_x
         self.checkbox_sides["min_y"] = min_y
         self.checkbox_sides["max_y"] = max_y
-
-        #  get area
-        self._checkbox_area = (max_x - min_x) * (max_y - min_y)
-
-    def __get__area__(self):
-        """get area of hitbox.
-        algorithm from https://www.mathopenref.com/coordpolygonarea2.html"""
-        #  rect area
-        x, y = [], []
-
-        for point in self._points:
-            x.append(point[0])
-            y.append(point[1])
-
-        points = len(self._points)
-
-        area = 0
-        j = points - 1
-
-        for i in range(points):
-            area += (x[j] + x[i]) * (y[j] - y[i])
-            j = i  # j is previous vertex to i
-
-        self.area = area / 2
 
     def __in_range__(self, rect):
         """check if other rect is in range of self (checkboxes intersect)"""
@@ -177,7 +170,7 @@ class Rect:
         algorithm from https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/"""
         #  checks if 3 points are in an counterclockwise (ccw) configuration
         def ccw(point1, point2, point3):
-            return (point3[1] - point1[1]) * (point2[0] - point1[0]) > (point2[1] - point1[1]) * (point3[0] - point1[0])
+            return (point3.y - point1.y) * (point2.x - point1.x) > (point2.y - point1.y) * (point3.x - point1.x)
 
         point_a = line[0]
         point_b = line[1]
