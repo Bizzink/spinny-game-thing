@@ -11,6 +11,8 @@ class Tile:
         self.hitbox = Rect(pos, hitbox)
         self.hitbox.update(self.x, self.y, self.rot)
 
+        self.friction = 0.95
+
         #  sprite setup
         self._image = pgl.resource.image(image)
         self._image.center_x = self._image.width // 2

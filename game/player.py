@@ -1,7 +1,8 @@
 import pyglet as pgl
 from pyglet.window import key
-from math import sqrt, atan, cos, sin, pi
+from math import sqrt, atan2, cos, sin, pi
 from .rect import Rect
+from .particle import PointEmitter
 
 
 class Player:
@@ -36,20 +37,25 @@ class Player:
         self._sprite = pgl.sprite.Sprite(img=self._image, x=self.x, y=self.y, batch=batch, group=group)
         self._sprite.scale = 0.1
 
+        self._smoke_particles = PointEmitter((self.x, self.y), direction = self.rot, size = 0.5, size_rand = 10, vel = 500, vel_rand = 2, rot_vel_rand = 100, spread = 50, emit_speed = 20, lifetime = 0.2, batch = batch, group = group)
+
         self._debug = False
         self._debug_direction = None
         self._debug_velocity = None
 
-        self.landed = False
+        self.slide_line = None
+        self.slide_friction = 1
 
     def delete(self):
         self._sprite.delete()
         self.debug_disable()
 
     def update(self, dt):
+        self._smoke_particles.set_intensity(max_particles = 0)
         #  key handling
         if self.key_handler[key.W]:
             self.accelerate(0, self._acc, mode = "relative")
+            self._smoke_particles.set_intensity(max_particles = 10)
         if self.key_handler[key.S]:
             self.accelerate(0, -self._acc, mode = "relative")
         if self.key_handler[key.A]:
@@ -57,7 +63,8 @@ class Player:
         if self.key_handler[key.D]:
             self.__acc_rot__(self._rot_acc)
 
-        if self.landed: self.__landed__()
+        if self.slide_line is not None:
+            self.__slide__(self.slide_line)
 
         #  physics update
         self.x += self.vel_x * dt
@@ -65,7 +72,15 @@ class Player:
         self.rot += self.vel_rot * dt
         self.__drag__()
 
+        while self.rot > 360:
+            self.rot -= 360
+
+        while self.rot < -360:
+            self.rot += 360
+
         self.hitbox.update(self.x, self.y, self.rot)
+        self._smoke_particles.set_pos(self.x, self.y, direction = self.rot + 90)
+        self._smoke_particles.update(dt)
 
         #  sprite update
         self._sprite.x = self.x
@@ -78,17 +93,35 @@ class Player:
                                               self.y + (sin((self.rot - 90) * pi / 180) * -100)]
             self._debug_velocity.vertices = [self.x, self.y, self.x + self.vel_x * 0.5, self.y + self.vel_y * 0.5]
 
-    def __landed__(self):
-        if self.vel_y < 0:
-            self.vel_y = 0
+    def __slide__(self, line):
+        """if velocity direction is towards line, set velocity parallel to line"""
+        # get line angle
+        line_dy = line[1].y - line[0].y
+        line_dx = abs(line[0].x - line[1].x)
+        angle = atan2(line_dy, line_dx) + pi
 
-        self.vel_x *= 0.9
-        self.vel_rot *= 0.9
+        if line[0].x > line[1].x:
+            line_dy = line[0].y - line[1].y
+            angle = atan2(line_dy, line_dx)
 
-    def slide(self, line):
-        angle = atan()
+        if angle > pi * 2: angle -= pi * 2
 
-    def debug_enable(self, batch, group=None):
+        # get angle of self velocity
+        vel_angle = atan2(self.vel_y, self.vel_x)
+
+        # if velocity is towards line
+        if angle - pi < vel_angle < angle:
+            # get self total velocity
+            vel = sqrt(self.vel_x ** 2 + self.vel_y ** 2)
+
+            # get component of velocity that is parallel to line
+            new_vel = cos(angle - vel_angle) * vel * self.slide_friction
+
+            # set self x, y velocity to this velocity & angle
+            self.vel_x = new_vel * cos(angle)
+            self.vel_y = new_vel * sin(angle)
+
+    def debug_enable(self, batch, group = None):
         """enable drawing of rotation and velocity vectors"""
         self._debug = True
 
@@ -101,6 +134,7 @@ class Player:
                                          ('c3B/static', (255, 0, 0, 100, 0, 0)))
 
         self.hitbox.debug_enable(batch, group)
+        self._smoke_particles.debug_enable(batch, group)
 
     def debug_disable(self):
         """remove debug visuals from batch"""
@@ -109,6 +143,7 @@ class Player:
         self._debug_direction.delete()
         self._debug_velocity.delete()
         self.hitbox.debug_disable()
+        self._smoke_particles.debug_disable()
 
     def debug_toggle(self, batch, group):
         """toggle debug on or off"""
@@ -176,11 +211,7 @@ class Player:
                 if self.vel_x == 0:
                     vel_ang = -pi / 2
                 else:
-                    vel_ang = atan(self.vel_y / self.vel_x)
-
-                #  add 180 degrees if vel_x is negative
-                if self.vel_x < 0:
-                    vel_ang += pi
+                    vel_ang = atan2(self.vel_y, self.vel_x)
 
                 self.vel_x = cos(vel_ang) * self._max_vel
                 self.vel_y = sin(vel_ang) * self._max_vel

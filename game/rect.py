@@ -64,11 +64,11 @@ class Rect:
                 line = [points[i - 1], points[i]]
 
                 if self.__intersects__(line):
-                    return True
+                    return line
 
-            return False
+            return None
         else:
-            return False
+            return None
 
     def debug_enable(self, batch, group = None):
         """enable drawing of rotation and velocity vectors"""

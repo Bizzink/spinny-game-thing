@@ -1,8 +1,8 @@
-import pyglet as pgl
 from pyglet.window import key
 from game.player import Player
 from game.title import Title
 from game.tile import *
+from game.particle import PointEmitter, Particle
 
 framerate = 60.0
 
@@ -33,6 +33,8 @@ debug = False
 
 pgl.gl.glLineWidth(2)
 
+test_line = None
+
 
 def screen_wrap(obj):
     dist = 5
@@ -48,7 +50,7 @@ def screen_wrap(obj):
 
 
 def update(dt):
-    global debug
+    global debug, test_line
     if key_handler[key.F3]:
         if key.F3 not in prev_keys:
             prev_keys.append(key.F3)
@@ -69,11 +71,19 @@ def update(dt):
 
     player1.accelerate(0, -20)
 
-    landed = False
+    contact_line = None
+    contact_friction = 1
+
+    if test_line is not None:
+        test_line.delete()
+        test_line = None
 
     for tile in tiles:
-        if player1.hitbox.contacts(tile.hitbox):
-            landed = True
+        line = player1.hitbox.contacts(tile.hitbox)
+
+        if line is not None:
+            contact_line = line
+            contact_friction = tile.friction
 
             if debug:
                 player1.hitbox.colour([50, 255, 50])
@@ -84,7 +94,11 @@ def update(dt):
                 player1.hitbox.colour([50, 50, 255])
                 tile.hitbox.colour([50, 50, 255])
 
-    player1.landed = landed
+    player1.slide_line = contact_line
+    player1.slide_friction = contact_friction
+
+    if contact_line is not None and debug:
+        test_line = main_batch.add(2, pgl.gl.GL_LINES, debug_group, ('v2f', (contact_line[0].x, contact_line[0].y, contact_line[1].x, contact_line[1].y)), ('c3B', (255, 0, 150, 255, 0, 150)))
 
     for obj in objects:
 
