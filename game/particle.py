@@ -149,7 +149,7 @@ class PointEmitter:
         if self._particle_vel_rand != 0: vel += randrange(-self._particle_vel_rand // 2, self._particle_vel_rand // 2)
 
         lifetime = self._particle_lifetime
-        if self._particle_lifetime_rand != 0: lifetime += randrange(-self._particle_lifetime_rand // 2, self._particle_lifetime_rand // 2)
+        if self._particle_lifetime_rand != 0: lifetime += randrange((-self._particle_lifetime_rand // 2) * 100, (self._particle_lifetime_rand // 2) * 100) / 100
 
         direction = self._direction
         if self._spread != 0: direction += randrange(-self._spread // 2, self._spread // 2)
@@ -232,5 +232,8 @@ class PointEmitter:
             self.debug_disable()
         else:
             self.debug_enable(batch, group)
+
+    def get_particle_count(self):
+        return len(self._particles)
 
 

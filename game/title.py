@@ -2,8 +2,8 @@ import pyglet as pgl
 
 
 class Title:
-    def __init__(self, text, pos, size = 30, colour = (255, 255, 255, 255), batch = None, group = None):
-        self._label = pgl.text.Label(text = text, x = pos[0], y = pos[1], font_size = size, anchor_x = 'center', anchor_y = 'center', batch = batch, color = colour, group = group)
+    def __init__(self, text, pos, size = 30, colour = (255, 255, 255, 255), batch = None, group = None, anchor_x = 'center', anchor_y = 'center'):
+        self._label = pgl.text.Label(text = text, x = pos[0], y = pos[1], font_size = size, anchor_x = anchor_x, anchor_y = anchor_y, batch = batch, color = colour, group = group)
 
     def delete(self):
         self._label.delete()

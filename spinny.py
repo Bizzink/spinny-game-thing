@@ -1,8 +1,7 @@
 from pyglet.window import key
 from game.player import Player
-from game.title import Title
 from game.tile import *
-from game.particle import PointEmitter, Particle
+from game.debug import Debug
 
 framerate = 60.0
 
@@ -25,11 +24,17 @@ text_group = pgl.graphics.OrderedGroup(0)
 player1 = Player((150, 50), [[-5, -15], [-5, 15], [5, 15], [5, -15]], main_batch, player_group)
 game_window.push_handlers(player1.key_handler)
 
-title_test = Title("debug off", (700, 50), size = 20, batch=main_batch, group=text_group)
-
 objects = [player1]
 tiles = [TilePipe((i * 51 + 50, 300), 0, main_batch, tile_group) for i in range(8)]
-debug = False
+
+debug = Debug(batch = main_batch, group = debug_group)
+debug.add_group(tiles, 'tiles')
+debug.add_group([player1, player1.hitbox], 'player')
+debug.add_group(player1.smoke_particles, 'particles')
+
+debug.dynamic_variable("Particles", player1.smoke_particles.get_particle_count, (10, 700), size = 15, anchor_x = 'left')
+debug.dynamic_variable("Player velocity", player1.print_velocity, (10, 680), size = 15, anchor_x = 'left')
+debug.dynamic_variable("Player position", player1.print_pos, (10, 660), size = 15, anchor_x = 'left')
 
 pgl.gl.glLineWidth(2)
 
@@ -54,20 +59,13 @@ def update(dt):
     if key_handler[key.F3]:
         if key.F3 not in prev_keys:
             prev_keys.append(key.F3)
-            debug = True
-            for obj in objects:
-                obj.debug_toggle(main_batch, debug_group)
-            for tile in tiles:
-                tile.debug_toggle(main_batch, debug_group)
-
-            if debug:
-                title_test.update_text("debug on")
-            else:
-                title_test.update_text("debug off")
+            debug.toggle_all()
 
     if not key_handler[key.F3]:
         if key.F3 in prev_keys:
             prev_keys.remove(key.F3)
+
+    debug.update()
 
     player1.accelerate(0, -20)
 
@@ -110,7 +108,6 @@ def update(dt):
 @game_window.event
 def on_draw():
     game_window.clear()
-
     main_batch.draw()
 
 

@@ -37,7 +37,7 @@ class Player:
         self._sprite = pgl.sprite.Sprite(img=self._image, x=self.x, y=self.y, batch=batch, group=group)
         self._sprite.scale = 0.1
 
-        self._smoke_particles = PointEmitter((self.x, self.y), direction = self.rot, size = 0.5, size_rand = 10, vel = 500, vel_rand = 2, rot_vel_rand = 100, spread = 50, emit_speed = 20, lifetime = 0.2, batch = batch, group = group)
+        self.smoke_particles = PointEmitter((self.x, self.y), direction = self.rot, max_particles = 20, size = 0.5, size_rand = 10, vel = 500, vel_rand = 2, rot_vel_rand = 100, spread = 50, emit_speed = 50, lifetime = 0.3, batch = batch, group = group)
 
         self._debug = False
         self._debug_direction = None
@@ -51,11 +51,11 @@ class Player:
         self.debug_disable()
 
     def update(self, dt):
-        self._smoke_particles.set_intensity(max_particles = 0)
+        self.smoke_particles.set_intensity(max_particles = 0)
         #  key handling
         if self.key_handler[key.W]:
             self.accelerate(0, self._acc, mode = "relative")
-            self._smoke_particles.set_intensity(max_particles = 10)
+            self.smoke_particles.set_intensity(max_particles = 20)
         if self.key_handler[key.S]:
             self.accelerate(0, -self._acc, mode = "relative")
         if self.key_handler[key.A]:
@@ -79,8 +79,8 @@ class Player:
             self.rot += 360
 
         self.hitbox.update(self.x, self.y, self.rot)
-        self._smoke_particles.set_pos(self.x, self.y, direction = self.rot + 90)
-        self._smoke_particles.update(dt)
+        self.smoke_particles.set_pos(self.x, self.y, direction = self.rot + 90)
+        self.smoke_particles.update(dt)
 
         #  sprite update
         self._sprite.x = self.x
@@ -133,24 +133,12 @@ class Player:
             self.x, self.y, self.x + self.vel_x * 0.5, self.y + self.vel_y * 0.5)),
                                          ('c3B/static', (255, 0, 0, 100, 0, 0)))
 
-        self.hitbox.debug_enable(batch, group)
-        self._smoke_particles.debug_enable(batch, group)
-
     def debug_disable(self):
         """remove debug visuals from batch"""
         self._debug = False
 
         self._debug_direction.delete()
         self._debug_velocity.delete()
-        self.hitbox.debug_disable()
-        self._smoke_particles.debug_disable()
-
-    def debug_toggle(self, batch, group):
-        """toggle debug on or off"""
-        if self._debug:
-            self.debug_disable()
-        else:
-            self.debug_enable(batch, group)
 
     def accelerate(self, x, y, mode = "absolute"):
         if mode == "absolute":
@@ -171,6 +159,13 @@ class Player:
             self.__limit_velocity__()
         else:
             raise ValueError("Invalid mode : {}".format(mode))
+
+    def print_velocity(self):
+        total_vel = sqrt(self.vel_x ** 2 + self.vel_y ** 2)
+        return "{:.2f} (x: {:.2f}, y: {:.2f})".format(total_vel, self.vel_x, self.vel_y)
+
+    def print_pos(self):
+        return "x: {:.2f}, y: {:.2f}".format(self.x, self.y)
 
     def __acc_rot__(self, a):
         """accelerate rotation of player, cap at max_rot"""

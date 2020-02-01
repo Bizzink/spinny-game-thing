@@ -100,13 +100,6 @@ class Rect:
 
         self._debug_vertex_list = None
 
-    def debug_toggle(self, batch, group):
-        """toggle debug on or off"""
-        if self._debug:
-            self.debug_disable()
-        else:
-            self.debug_enable(batch, group)
-
     def colour(self, colour, side=-1):
         """change colour of checkbox (for debug)"""
         if self._debug:

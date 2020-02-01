@@ -27,20 +27,13 @@ class Tile:
 
     def debug_enable(self, batch, group=None):
         """enable drawing of hitbox"""
+        self._debug = True
         self.hitbox.debug_enable(batch, group)
 
     def debug_disable(self):
         """delete debug visuals from batch"""
+        self._debug = False
         self.hitbox.debug_disable()
-
-    def debug_toggle(self, batch, group=None):
-        """toggle debug rendering on or off"""
-        if self._debug:
-            self._debug = False
-            self.debug_disable()
-        else:
-            self._debug = True
-            self.debug_enable(batch, group)
 
 
 class TileAll(Tile):
