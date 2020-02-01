@@ -95,9 +95,6 @@ def update(dt):
     player1.slide_line = contact_line
     player1.slide_friction = contact_friction
 
-    if contact_line is not None and debug:
-        test_line = main_batch.add(2, pgl.gl.GL_LINES, debug_group, ('v2f', (contact_line[0].x, contact_line[0].y, contact_line[1].x, contact_line[1].y)), ('c3B', (255, 0, 150, 255, 0, 150)))
-
     for obj in objects:
 
         obj.update(dt)

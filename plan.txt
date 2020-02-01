@@ -4,5 +4,3 @@ pickups:
 level editor
 
 moving camera
-
-convert rect to series of lines

@@ -95,16 +95,7 @@ class Player:
 
     def __slide__(self, line):
         """if velocity direction is towards line, set velocity parallel to line"""
-        # get line angle
-        line_dy = line[1].y - line[0].y
-        line_dx = abs(line[0].x - line[1].x)
-        angle = atan2(line_dy, line_dx) + pi
-
-        if line[0].x > line[1].x:
-            line_dy = line[0].y - line[1].y
-            angle = atan2(line_dy, line_dx)
-
-        if angle > pi * 2: angle -= pi * 2
+        angle = line.angle()
 
         # get angle of self velocity
         vel_angle = atan2(self.vel_y, self.vel_x)

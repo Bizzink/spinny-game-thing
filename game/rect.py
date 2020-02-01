@@ -1,5 +1,5 @@
 import pyglet as pgl
-from math import cos, sin, pi
+from math import cos, sin, pi, atan2
 
 
 class Point:
@@ -22,6 +22,84 @@ class Point:
         self.y = y
 
 
+class Line:
+    def __init__(self, points):
+        self._points = points
+
+        self._debug = False
+        self._debug_vertex = None
+
+    def update(self, points):
+        self._points = points
+
+        if self._debug:
+            self._debug_vertex.vertices = [self._points[0].x, self._points[0].y, self._points[1].x, self._points[1].y]
+
+    def get_points(self):
+        return self._points.copy()
+
+    def contacts(self, line):
+        """check if 2 line segments intersect.
+        algorithm from https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/"""
+
+        #  checks if 3 points are in an counterclockwise (ccw) configuration
+        def ccw(point1, point2, point3):
+            return (point3.y - point1.y) * (point2.x - point1.x) > (point2.y - point1.y) * (point3.x - point1.x)
+
+        point_a, point_b = line.get_points()
+        point_c = self._points[0]
+        point_d = self._points[1]
+
+        if ccw(point_a, point_c, point_d) != ccw(point_b, point_c, point_d) and ccw(point_a, point_b, point_c) != ccw(
+                point_a, point_b, point_d):
+            return True
+        return False
+
+    def min_x(self):
+        return min(self._points[0].x, self._points[1].x)
+
+    def min_y(self):
+        return min(self._points[0].y, self._points[1].y)
+
+    def max_x(self):
+        return max(self._points[0].x, self._points[1].x)
+
+    def max_y(self):
+        return max(self._points[0].y, self._points[1].y)
+
+    def angle(self):
+        """return angle of line"""
+        dy = self._points[1].y - self._points[0].y
+        dx = abs(self._points[0].x - self._points[1].x)
+        angle = atan2(dy, dx) + pi
+
+        if self._points[0].x > self._points[1].x:
+            dy = self._points[0].y - self._points[1].y
+            angle = atan2(dy, dx)
+
+        if angle > pi * 2: angle -= pi * 2
+
+        return angle
+
+    def debug_enable(self, batch, group=None):
+        """disable debug vertex rendering"""
+        self._debug = True
+        self._debug_vertex = batch.add(2, pgl.gl.GL_LINES, group, (
+            'v2f', (self._points[0].x, self._points[0].y, self._points[1].x, self._points[1].y)),
+                                       ('c3B', (50, 50, 255, 50, 50, 255)))
+
+    def debug_disable(self):
+        """disable debug vertex rendering"""
+        self._debug = False
+        self._debug_vertex.delete()
+        self._debug_vertex = None
+
+    def colour(self, colour):
+        """set colour of debug vertex"""
+        if self._debug:
+            self._debug_vertex.colors = colour
+
+
 class Rect:
     def __init__(self, pos, points):
         self.x = pos[0]
@@ -30,6 +108,8 @@ class Rect:
 
         self._points = [Point(point[0] + self.x, point[1] + self.y) for point in points]
         self._points_ref = [Point(point[0], point[1]) for point in points]
+
+        self._sides = [Line([points[i - 1], points[i]]) for i in range(len(points))]
 
         self._checkbox = None
         self.checkbox_sides = {}
@@ -41,16 +121,12 @@ class Rect:
     def update(self, x, y, rot):
         """update position and rotation"""
         self.__update_position__(x, y, rot)
+        self.__update_sides__()
         self.__update_checkbox__()
 
         if self._debug:
-            for i in range(len(self._points)):
-                self._debug_vertex_list[i].vertices = [self._points[i - 1].x, self._points[i - 1].y,
-                                                       self._points[i].x, self._points[i].y]
-
-            for i in range(len(self._checkbox)):
-                j = i + len(self._points)
-                self._debug_vertex_list[j].vertices = [self._checkbox[i - 1].x, self._checkbox[i - 1].y,
+            for i in range(4):
+                self._debug_vertex_list[i].vertices = [self._checkbox[i - 1].x, self._checkbox[i - 1].y,
                                                        self._checkbox[i].x, self._checkbox[i].y]
 
     def contacts(self, rect):
@@ -58,30 +134,22 @@ class Rect:
         #  check if rects are in range
         if self.__in_range__(rect):
             #  check each side of rect to see if it intersects
-            points = rect.get_points()
+            rect_sides = rect.get_sides()
 
-            for i in range(len(points)):
-                line = [points[i - 1], points[i]]
+            for rect_side in rect_sides:
+                for side in self._sides:
+                    if side.contacts(rect_side):
+                        return rect_side
+        return None
 
-                if self.__intersects__(line):
-                    return line
-
-            return None
-        else:
-            return None
-
-    def debug_enable(self, batch, group = None):
+    def debug_enable(self, batch, group=None):
         """enable drawing of rotation and velocity vectors"""
         self._debug = True
-        self._debug_vertex_list = []
 
-        for i in range(len(self._points)):
-            vertex = batch.add(2, pgl.gl.GL_LINES, group, ('v2f', (self._points[i - 1].x,
-                                                                   self._points[i - 1].y,
-                                                                   self._points[i].x,
-                                                                   self._points[i].y)),
-                               ('c3B', (50, 50, 255, 50, 50, 255)))
-            self._debug_vertex_list.append(vertex)
+        for side in self._sides:
+            side.debug_enable(batch, group)
+
+        self._debug_vertex_list = []
 
         for i in range(len(self._checkbox)):
             vertex = batch.add(2, pgl.gl.GL_LINES, group, ('v2f', ([self._checkbox[i - 1].x,
@@ -95,6 +163,9 @@ class Rect:
         """remove debug visuals from batch"""
         self._debug = False
 
+        for side in self._sides:
+            side.debug_disable()
+
         for vertex in self._debug_vertex_list:
             vertex.delete()
 
@@ -106,13 +177,16 @@ class Rect:
             colour.extend(colour)
 
             if side == -1:
-                for i in range(len(self._points)):
-                    self._debug_vertex_list[i].colors = colour
+                for side in self._sides:
+                    side.colour(colour)
             else:
-                self._debug_vertex_list[side].colors = colour
+                self._sides[side].colour(colour)
 
     def get_points(self):
         return self._points.copy()
+
+    def get_sides(self):
+        return self._sides.copy()
 
     def __update_position__(self, x, y, rot):
         """move and rotate to specified position"""
@@ -129,6 +203,10 @@ class Rect:
 
         self._points = [Point(c * point.x - s * point.y + self.x, s * point.x + c * point.y + self.y) for point in
                         points]
+
+    def __update_sides__(self):
+        for i in range(len(self._sides)):
+            self._sides[i].update([self._points[i - 1], self._points[i]])
 
     def __update_checkbox__(self):
         """update checkbox (bounding box of hitbox)"""
@@ -157,22 +235,3 @@ class Rect:
             return False
         else:
             return True
-
-    def __intersects__(self, line):
-        """check if 2 line segments intersect.
-        algorithm from https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/"""
-        #  checks if 3 points are in an counterclockwise (ccw) configuration
-        def ccw(point1, point2, point3):
-            return (point3.y - point1.y) * (point2.x - point1.x) > (point2.y - point1.y) * (point3.x - point1.x)
-
-        point_a = line[0]
-        point_b = line[1]
-
-        #  check to see if any line in self intersects with line
-        for i in range(len(self._points)):
-            point_c = self._points[i - 1]
-            point_d = self._points[i]
-
-            if ccw(point_a, point_c, point_d) != ccw(point_b, point_c, point_d) and \
-                    ccw(point_a, point_b, point_c) != ccw(point_a, point_b, point_d):
-                return True
