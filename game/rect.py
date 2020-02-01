@@ -81,12 +81,12 @@ class Line:
 
         return angle
 
-    def debug_enable(self, batch, group=None):
+    def debug_enable(self, batch, group = None):
         """disable debug vertex rendering"""
         self._debug = True
         self._debug_vertex = batch.add(2, pgl.gl.GL_LINES, group, (
             'v2f', (self._points[0].x, self._points[0].y, self._points[1].x, self._points[1].y)),
-                                       ('c3B', (50, 50, 255, 50, 50, 255)))
+                                       ('c3B', (255, 255, 50, 255, 255, 50)))
 
     def debug_disable(self):
         """disable debug vertex rendering"""
@@ -108,8 +108,9 @@ class Rect:
 
         self._points = [Point(point[0] + self.x, point[1] + self.y) for point in points]
         self._points_ref = [Point(point[0], point[1]) for point in points]
-
         self._sides = [Line([points[i - 1], points[i]]) for i in range(len(points))]
+
+        self.friction = 0.9
 
         self._checkbox = None
         self.checkbox_sides = {}

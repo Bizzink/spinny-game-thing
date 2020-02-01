@@ -34,6 +34,7 @@ class Particle:
         return "Particle ({:.3f}, {:.3f}), vel = ({:.3f}, {:.3f}), rotation vel = {:.3f}, age = ({:.3f} / {})".format(self._x, self._y, self._vel_x, self._vel_y, self._rot_vel, time() - self.age, self.lifetime)
 
     def kill(self):
+        """remove particle"""
         self._sprite.delete()
 
         if self._debug_vertex_list is not None:
@@ -54,10 +55,11 @@ class Particle:
         if self.debug:
             self._debug_vertex_list[0].vertices = [self._x, self._y, self._x + (cos(self.rot * pi / 180) * 30),
                                                    self._y + (sin(self.rot * pi / 180) * -30)]
-            self._debug_vertex_list[1].vertices = [self._x, self._y, self._x + self._vel_x * 0.5,
-                                                   self._y + self._vel_y * 0.5]
+            self._debug_vertex_list[1].vertices = [self._x, self._y, self._x + self._vel_x * 0.1,
+                                                   self._y + self._vel_y * 0.1]
 
     def __drag__(self):
+        """gradually slow velocity"""
         self._vel_x *= self._drag
         self._vel_y *= self._drag
 
@@ -70,23 +72,18 @@ class Particle:
             self._y + (sin(self.rot * pi / 180) * -30))), ('c3B/static', (0, 255, 0, 0, 100, 0)))
 
         debug_velocity = batch.add(2, pgl.gl.GL_LINES, group, ('v2f/stream', (
-            self._x, self._y, self._x + self._vel_x * 0.5, self._y + self._vel_y * 0.5)),
+            self._x, self._y, self._x + self._vel_x * 0.1, self._y + self._vel_y * 0.1)),
                                    ('c3B/static', (255, 0, 0, 100, 0, 0)))
 
         self._debug_vertex_list = [debug_direction, debug_velocity]
 
     def debug_disable(self):
+        """disable drawing ov debug vectors"""
         self.debug = False
         for vertex in self._debug_vertex_list:
             vertex.delete()
 
         self._debug_vertex_list = None
-
-    def debug_toggle(self, batch, group=None):
-        if self.debug:
-            self.debug_disable()
-        else:
-            self.debug_enable(batch, group)
 
 
 class PointEmitter:
@@ -149,7 +146,7 @@ class PointEmitter:
         if self._particle_vel_rand != 0: vel += randrange(-self._particle_vel_rand // 2, self._particle_vel_rand // 2)
 
         lifetime = self._particle_lifetime
-        if self._particle_lifetime_rand != 0: lifetime += randrange((-self._particle_lifetime_rand // 2) * 100, (self._particle_lifetime_rand // 2) * 100) / 100
+        if self._particle_lifetime_rand != 0: lifetime += randrange(((-self._particle_lifetime_rand * 1000) // 2), ((self._particle_lifetime_rand * 1000) // 2)) / 1000
 
         direction = self._direction
         if self._spread != 0: direction += randrange(-self._spread // 2, self._spread // 2)
@@ -159,9 +156,11 @@ class PointEmitter:
         if self._particle_size_rand != 0: size += randrange(-self._particle_size_rand // 2, self._particle_size_rand // 2) / 100
 
         particle = Particle((self.x, self.y), rot_vel, direction, self._particle_drag, lifetime, self._particle_image, size, self._batch, self._group)
+
         return particle
 
     def set_pos(self, x, y, direction = None):
+        """set positon, rotation from which particles are emitted"""
         self.x = x
         self.y = y
 
@@ -180,6 +179,7 @@ class PointEmitter:
                                                    self.y + (sin(self._direction * pi / 180) * -self._particle_vel * self._particle_lifetime)]
 
     def set_intensity(self, vel = None, vel_rand = None, rot_vel = None, rot_vel_rand = None, emit_speed = None, size = None, size_rand = None, spread = None, max_particles = None, lifetime = None, lifetime_rand = None):
+        """change parameters related to intensity of particles emitted"""
         # emitter parameters
         if max_particles is not None: self._max_particles = max_particles
         if emit_speed is not None: self._emit_speed = emit_speed
@@ -196,6 +196,7 @@ class PointEmitter:
         if lifetime_rand is not None: self._particle_lifetime_rand = lifetime_rand
 
     def debug_enable(self, batch, group = None):
+        """enable drawing of direction vector, spread cone of emitter"""
         self._debug = True
         self._debug_group = group
 
@@ -217,6 +218,7 @@ class PointEmitter:
         self._debug_vertex_list = [angle1, angle2, direction]
 
     def debug_disable(self):
+        """disable drawing of debug vectors"""
         self._debug = False
 
         for vertex in self._debug_vertex_list:
@@ -227,13 +229,8 @@ class PointEmitter:
         for particle in self._particles:
             particle.debug_disable()
 
-    def debug_toggle(self, batch, group=None):
-        if self._debug:
-            self.debug_disable()
-        else:
-            self.debug_enable(batch, group)
-
     def get_particle_count(self):
+        """return amount of particles current alive in system"""
         return len(self._particles)
 
 
