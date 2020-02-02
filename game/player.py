@@ -6,11 +6,11 @@ from .particle import PointEmitter
 
 
 class Player:
-    def __init__(self, pos, hitbox, batch=None, group=None):
+    def __init__(self, pos, batch=None, group=None):
         self.x = pos[0]
         self.y = pos[1]
 
-        self.hitbox = Rect(pos, hitbox)
+        self.hitbox = Rect(pos, [[-5, -15], [-5, 15], [5, 15], [5, -15]])
 
         self._acc = 50
         self._max_vel = 500
@@ -37,7 +37,7 @@ class Player:
         self._sprite = pgl.sprite.Sprite(img=self._image, x=self.x, y=self.y, batch=batch, group=group)
         self._sprite.scale = 0.1
 
-        self.smoke_particles = PointEmitter((self.x, self.y), direction = self.rot, max_particles = 20, size = 0.5, size_rand = 10, vel = 500, vel_rand = 2, rot_vel_rand = 100, spread = 50, emit_speed = 50, lifetime = 0.3, lifetime_rand= 0.4, batch = batch, group = group)
+        self.smoke_particles = PointEmitter((self.x, self.y), direction = self.rot, max_particles = 20, size = 5, size_rand = 50, vel = 500, vel_rand = 2, rot_vel_rand = 100, spread = 50, emit_speed = 50, lifetime = 0.3, lifetime_rand= 0.4, batch = batch, group = group)
         self._rects_in_range = []
 
         self._debug = False

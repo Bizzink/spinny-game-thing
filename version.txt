@@ -1,0 +1,2 @@
+current_version = 1
+supported_versions = 1

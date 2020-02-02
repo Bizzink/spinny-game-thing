@@ -3,7 +3,8 @@ from .rect import Rect
 
 
 class Tile:
-    def __init__(self, pos, rot, image, hitbox, batch=None, group=None):
+    def __init__(self, pos, rot, image, id_val, hitbox, batch=None, group=None):
+        self.id = id_val
         self.x = pos[0]
         self.y = pos[1]
         self.rot = rot
@@ -38,14 +39,14 @@ class Tile:
 
 class TileAll(Tile):
     def __init__(self, pos, rot, batch=None, group=None):
-        super().__init__(pos, rot, "tile_all.png", [[-20, -20], [-20, 20], [20, 20], [20, -20]], batch=batch, group=group)
-
-
-class TilePipe(Tile):
-    def __init__(self, pos, rot, batch=None, group=None):
-        super().__init__(pos, rot, "tile_pipe.png", [[-25, 20], [-25, -20], [25, -20], [25, 20]], batch=batch, group=group)
+        super().__init__(pos, rot, "tile_all.png", 1, [[-20, -20], [-20, 20], [20, 20], [20, -20]], batch=batch, group=group)
 
 
 class TileEnd(Tile):
     def __init__(self, pos, rot, batch=None, group=None):
-        super().__init__(pos, rot, "tile_end.png", [[-20, 20], [-20, -20], [25, -20], [25, 20]], batch=batch, group=group)
+        super().__init__(pos, rot, "tile_end.png", 2, [[-20, 20], [-20, -20], [25, -20], [25, 20]], batch=batch, group=group)
+
+
+class TilePipe(Tile):
+    def __init__(self, pos, rot, batch=None, group=None):
+        super().__init__(pos, rot, "tile_pipe.png", 3, [[-25, 20], [-25, -20], [25, -20], [25, 20]], batch=batch, group=group)

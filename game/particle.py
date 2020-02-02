@@ -24,7 +24,7 @@ class Particle:
         self._image.anchor_x = self._image.width // 2
         self._image.anchor_y = self._image.height // 2
         self._sprite = pgl.sprite.Sprite(img=self._image, x=self._x, y=self._y, batch=batch, group=group)
-        self._sprite.scale = size
+        self._sprite.scale = size / 10
 
         # debug stuff
         self.debug = False
@@ -87,7 +87,7 @@ class Particle:
 
 
 class PointEmitter:
-    def __init__(self, pos, max_particles = 10, emit_speed = 1, direction = 0, rot_vel = 0, rot_vel_rand = 0, spread = 360, vel = 10, vel_rand = 0, image = "square.png", size = 1, size_rand = 0, drag = 1, lifetime = 1, lifetime_rand = 0, batch = None, group = None):
+    def __init__(self, pos, max_particles = 10, emit_speed = 1, direction = 0, rot_vel = 0, rot_vel_rand = 0, spread = 360, vel = 10, vel_rand = 0, image = "square.png", size = 10, size_rand = 0, drag = 1, lifetime = 1, lifetime_rand = 0, batch = None, group = None):
         """rotation related items are in degrees! - rot_vel, rot_vel_rand, direction, spread"""
         # emitter parameters
         self.x = pos[0]

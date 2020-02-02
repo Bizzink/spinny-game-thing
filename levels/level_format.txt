@@ -1,0 +1,55 @@
+LEVEL FILE FORMAT
+files are stored in binary format:
+
+byte 1: level file version (compatibility check)
+bytes 2 & 3: player starting position: x, y
+
+4 and up: data section:
+this includes tiles, particle systems, etc.
+formatted as follows:
+
+    object id
+    object data id + value
+    terminator
+
+each object has a unique id, and its parameters have an id.
+specific parameters can be set individually
+
+the terminator (2 consecutive 0s) indicates that the next object has begun
+
+id list:
+* = required
+
+id  param id    name
+0 0             terminator
+
+1               pink tile all sides
+2               pink tile end
+3               pink tile pipe
+
+    1           pos x *
+    2           pos y *
+    3           rotation (degrees)
+
+4               particle point emitter
+
+    1           pos x *
+    2           pos y *
+    3           direction (degrees)
+    4           spread (degrees)
+    5           max particles
+    6           emit speed
+    7           particle lifetime (10th of a second)
+    8           particle lifetime rand (10th of a second)
+    9           particle size
+    10          particle size rand
+    11          particle velocity
+    12          particle velocity rand
+    13          particle rotation velocity
+    14          particle rotation velocity rand
+    15          particle drag
+
+
+
+
+
