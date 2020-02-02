@@ -166,6 +166,10 @@ class Player:
     def near_rect(self, rect):
         self._rects_in_range.append(rect)
 
+    def set_pos(self, pos):
+        self.x = pos[0]
+        self.y = pos[1]
+
     def __acc_rot__(self, a):
         """accelerate rotation of player, cap at max_rot"""
         self.vel_rot += a

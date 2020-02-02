@@ -1,8 +1,10 @@
 LEVEL FILE FORMAT
 files are stored in binary format:
 
+all numbers apart from the first are stored as 2 byte pairs
+
 byte 1: level file version (compatibility check)
-bytes 2 & 3: player starting position: x, y
+bytes 2 - 5: player starting position: x, y
 
 4 and up: data section:
 this includes tiles, particle systems, etc.
@@ -15,7 +17,7 @@ formatted as follows:
 each object has a unique id, and its parameters have an id.
 specific parameters can be set individually
 
-the terminator (2 consecutive 0s) indicates that the next object has begun
+the terminator (255, 255, 255) indicates that the next object has begun
 
 id list:
 * = required
@@ -29,7 +31,7 @@ id  param id    name
 
     1           pos x *
     2           pos y *
-    3           rotation (degrees)
+    3           rotation (degrees) *
 
 4               particle point emitter
 
@@ -48,6 +50,8 @@ id  param id    name
     13          particle rotation velocity
     14          particle rotation velocity rand
     15          particle drag
+
+5               title (unimplemented)
 
 
 
