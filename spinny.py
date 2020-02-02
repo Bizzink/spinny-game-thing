@@ -54,7 +54,7 @@ if __name__ == '__main__':
     current, supported = get_version()
 
     level = Level(current, supported, game_window, main_batch)
-    level.load("test2")
+    level.load("test3")
 
     pgl.clock.schedule_interval(update, 1 / framerate)
     pgl.app.run()

@@ -44,7 +44,7 @@ id  param id    name
     7           particle lifetime (10th of a second)
     8           particle lifetime rand (10th of a second)
     9           particle size
-    10          particle size rand
+    10          particle size rand (100th of a size)
     11          particle velocity
     12          particle velocity rand
     13          particle rotation velocity

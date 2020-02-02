@@ -33,10 +33,10 @@ class Debug:
             if len(self._titles) > 0:
                 for name in self._titles.keys():
                     # value can be list of variables added together, or just one
-                    if type(self._dynamic_variables) == list:
+                    if type(self._dynamic_variables[name]) == list:
                         val = 0
 
-                        for item in self._dynamic_variables:
+                        for item in self._dynamic_variables[name]:
                             val += item()
 
                         self._titles[name].update_text("{}: {}".format(name, val))

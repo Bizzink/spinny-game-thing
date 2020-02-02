@@ -2,7 +2,6 @@ pickups:
     animation
 
 level editor
-    save / load
 
 moving camera
     -restricted by level?

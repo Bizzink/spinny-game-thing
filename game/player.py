@@ -47,6 +47,8 @@ class Player:
     def delete(self):
         self._sprite.delete()
         self.debug_disable()
+        self.hitbox.delete()
+        self.smoke_particles.delete()
 
     def update(self, dt):
         self.smoke_particles.set_intensity(max_particles = 0)

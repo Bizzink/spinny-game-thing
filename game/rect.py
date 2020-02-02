@@ -99,6 +99,11 @@ class Line:
         if self._debug:
             self._debug_vertex.colors = colour
 
+    def delete(self):
+        if self._debug:
+            self._debug_vertex.delete()
+            self._debug_vertex = None
+
 
 class Rect:
     def __init__(self, pos, points):
@@ -188,6 +193,15 @@ class Rect:
 
     def get_sides(self):
         return self._sides.copy()
+
+    def delete(self):
+        for side in self._sides:
+            side.delete()
+
+        if self._debug:
+            for vertex in self._debug_vertex_list:
+                vertex.delete()
+            self._debug_vertex_list = None
 
     def __update_position__(self, x, y, rot):
         """move and rotate to specified position"""

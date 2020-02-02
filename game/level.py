@@ -3,7 +3,7 @@ import pyglet as pgl
 from .player import Player
 from .debug import Debug
 from .tile import TilePipe, TileAll, TileEnd
-from .particle import Particle
+from .particle import PointEmitter
 
 
 def to_bin(num):
@@ -42,7 +42,7 @@ class Level:
         self._foreground = pgl.graphics.OrderedGroup(2)
         self._debug_group = pgl.graphics.OrderedGroup(3)
 
-        self.player = Player((0, 0), batch = self._batch, group = self._player_group)
+        self.player = Player((0, 0), batch=self._batch, group=self._player_group)
         self._window.push_handlers(self.player.key_handler)
 
         self.debug = Debug(self._batch, self._debug_group)
@@ -53,7 +53,11 @@ class Level:
         self.player.update(dt)
         self.debug.update()
 
+        for particle in self._data["particles"]:
+            particle.update(dt)
+
     def load(self, filename):
+        """load data from file, refer to level_format.txt for details"""
         filename += ".dat"
 
         if not os.path.isfile('levels/{}'.format(filename)):
@@ -72,7 +76,6 @@ class Level:
 
             prev_vals = [None, None]
             temp_data = []
-            print(data)
 
             for val in data[3:]:
                 if val == 255 and prev_vals == [255, 255]:
@@ -89,6 +92,7 @@ class Level:
             self.__debug_setup__()
 
     def save(self, filename):
+        """save items in data to a file, formatted as specified in level_format.txt"""
         filename += ".dat"
 
         if os.path.isfile('levels/{}'.format(filename)):
@@ -116,57 +120,57 @@ class Level:
                 data.extend([1, particle.x // 256, particle.x % 256])
                 data.extend([2, particle.y // 256, particle.y % 256])
 
-                if particle._direction != 0:
+                if particle.direction != 0:
                     data.append(3)
-                    data.extend(to_bin(particle._direction))
+                    data.extend(to_bin(particle.direction))
 
-                if particle._spread != 360:
+                if particle.spread != 360:
                     data.append(4)
-                    data.extend(to_bin(particle._spread))
+                    data.extend(to_bin(particle.spread))
 
-                if particle._max_particles != 10:
+                if particle.max_particles != 10:
                     data.append(5)
-                    data.extend(to_bin(particle._max_particles))
+                    data.extend(to_bin(particle.max_particles))
 
-                if particle._emit_speed != 1:
+                if particle.emit_speed != 1:
                     data.append(6)
-                    data.extend(to_bin(particle._emit_speed))
+                    data.extend(to_bin(particle.emit_speed))
 
-                if particle._particle_lifetime != 1:
+                if particle.particle_lifetime != 1:
                     data.append(7)
-                    data.extend(to_bin( particle._particle_lifetime))
+                    data.extend(to_bin(particle.particle_lifetime))
 
-                if particle._particle_lifetime_rand != 0:
+                if particle.particle_lifetime_rand != 0:
                     data.append(8)
-                    data.extend(to_bin(particle._particle_lifetime_rand))
+                    data.extend(to_bin(particle.particle_lifetime_rand))
 
-                if particle._particle_size != 10:
+                if particle.particle_size != 10:
                     data.append(9)
-                    data.extend(to_bin(particle._particle_size))
+                    data.extend(to_bin(particle.particle_size))
 
-                if particle._particle_size_rand != 0:
+                if particle.particle_size_rand != 0:
                     data.append(10)
-                    data.extend(to_bin(particle._particle_size_rand))
+                    data.extend(to_bin(particle.particle_size_rand))
 
-                if particle._particle_vel != 10:
+                if particle.particle_vel != 10:
                     data.append(11)
-                    data.extend(to_bin(particle._particle_vel))
+                    data.extend(to_bin(particle.particle_vel))
 
-                if particle._particle_vel_rand != 0:
+                if particle.particle_vel_rand != 0:
                     data.append(12)
-                    data.extend(to_bin(particle._particle_vel_rand))
+                    data.extend(to_bin(particle.particle_vel_rand))
 
-                if particle._particle_rot_vel != 0:
+                if particle.particle_rot_vel != 0:
                     data.append(13)
-                    data.extend(to_bin(particle._particle_rot_vel))
+                    data.extend(to_bin(particle.particle_rot_vel))
 
-                if particle._particle_rot_vel_rand != 0:
+                if particle.particle_rot_vel_rand != 0:
                     data.append(14)
-                    data.extend(to_bin(particle._particle_rot_vel_rand))
+                    data.extend(to_bin(particle.particle_rot_vel_rand))
 
-                if particle._particle_drag != 1:
+                if particle.particle_drag != 1:
                     data.append(15)
-                    data.extend(to_bin(particle._particle_drag))
+                    data.extend(to_bin(particle.particle_drag))
 
                 data.extend([255, 255, 255])
 
@@ -175,7 +179,11 @@ class Level:
             file.close()
 
     def __create_element__(self, data):
+        """create a new object from the parameters in data, refer to level_format.txt for details"""
+        #  Tile
         if data[0] in [1, 2, 3]:
+            x, y, rot = None, None, None
+
             for i in range(3):
                 if data[(3 * i) + 1] == 1:
                     x = from_bin(data[(3 * i) + 2], data[(3 * i) + 3])
@@ -185,7 +193,7 @@ class Level:
                     rot = from_bin(data[(3 * i) + 2], data[(3 * i) + 3])
 
             if data[0] == 1:
-                self._data["tiles"].append(TileAll((x, y), rot, batch = self._batch, group = self._background))
+                self._data["tiles"].append(TileAll((x, y), rot, batch=self._batch, group=self._background))
 
             elif data[0] == 2:
                 self._data["tiles"].append(TileEnd((x, y), rot, batch=self._batch, group=self._background))
@@ -193,13 +201,54 @@ class Level:
             elif data[0] == 3:
                 self._data["tiles"].append(TilePipe((x, y), rot, batch=self._batch, group=self._background))
 
+        #  Particle emitter
         elif data[0] == 4:
-            pass
+            data = data[1:]
+            emitter = PointEmitter((0, 0), batch = self._batch, group = self._foreground)
+
+            for i in range(len(data) // 3):
+                var = data[i * 3]  # variable id
+                val = from_bin(data[(i * 3) + 1], data[(i * 3) + 2])  # variable value
+
+                if var == 1:
+                    emitter.set_pos(val, emitter.y)
+                elif var == 2:
+                    emitter.set_pos(emitter.x, val)
+                elif var == 3:
+                    emitter.set_pos(emitter.x, emitter.y, direction = val)
+                elif var == 4:
+                    emitter.set_intensity(spread = val)
+                elif var == 5:
+                    emitter.set_intensity(max_particles = val)
+                elif var == 6:
+                    emitter.set_intensity(emit_speed = val)
+                elif var == 7:
+                    emitter.set_intensity(lifetime = val)
+                elif var == 8:
+                    emitter.set_intensity(lifetime_rand = val)
+                elif var == 9:
+                    emitter.set_intensity(size = val)
+                elif var == 10:
+                    emitter.set_intensity(size_rand = val)
+                elif var == 11:
+                    emitter.set_intensity(vel = val)
+                elif var == 12:
+                    emitter.set_intensity(vel_rand = val)
+                elif var == 13:
+                    emitter.set_intensity(rot_vel = val)
+                elif var == 14:
+                    emitter.set_intensity(rot_vel_rand = val)
+                elif var == 15:
+                    emitter.set_intensity(drag = val)
+
+            self._data["particles"].append(emitter)
 
     def start_pos(self, pos):
+        """set point at which player spawns"""
         self._data["start_pos"] = pos
 
     def __screen_wrap__(self, obj):
+        """if object goes off one side of the screen, move it to the other side"""
         dist = 5
 
         if obj.x < 0 - dist:
@@ -212,11 +261,17 @@ class Level:
             obj.y = 0
 
     def __debug_setup__(self):
+        """add objects in self._data to debug groups"""
         self.debug.add_group(self._data["tiles"], 'tiles')
         self.debug.add_group([self.player, self.player.hitbox], 'player')
         self.debug.add_group(self.player.smoke_particles, 'particles')
 
-        self.debug.dynamic_variable("Particles", self.player.smoke_particles.get_particle_count, (10, 700), size=15,
+        particle_counts = [self.player.smoke_particles.get_particle_count]
+
+        for particle in self._data["particles"]:
+            particle_counts.append(particle.get_particle_count)
+
+        self.debug.dynamic_variable("Particles", particle_counts, (10, 700), size=15,
                                     anchor_x='left')
         self.debug.dynamic_variable("Player velocity", self.player.print_velocity, (10, 680), size=15, anchor_x='left')
         self.debug.dynamic_variable("Player position", self.player.print_pos, (10, 660), size=15, anchor_x='left')
@@ -224,3 +279,21 @@ class Level:
         """===================================================TEMPORARY==================================================="""
         for tile in self._data["tiles"]:
             self.player.near_rect(tile.hitbox)
+
+    def __show_grid__(self):
+        # TODO: this + editor
+        pass
+
+    def add_object(self, section, obj):
+        """add object to data"""
+        self._data[section].append(obj)
+
+    def delete_object(self, section, obj):
+        """remove object from data"""
+        obj.delete()
+        self._data[section].remove(obj)
+
+    def set_mode(self, mode):
+        if mode == "edit":
+            self.player.delete()
+            self.__show_grid__()
