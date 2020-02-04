@@ -9,6 +9,8 @@ pgl.resource.path = ['resources']
 pgl.resource.reindex()
 pgl.font.add_directory('resources/fonts')
 main_batch = pgl.graphics.Batch()
+cursor_hand = game_window.get_system_mouse_cursor(game_window.CURSOR_HAND)
+cursor_normal = game_window.get_system_mouse_cursor(game_window.CURSOR_DEFAULT)
 
 
 def get_version():
@@ -42,7 +44,21 @@ def on_key_press(symbol, modifiers):
 @game_window.event
 def on_mouse_press(x, y, button, modifiers):
     if button == pgl.window.mouse.LEFT:
-        load_test.click(x, y)
+        if not level.is_loaded():
+            load_test.click(x, y)
+
+
+@game_window.event
+def on_mouse_motion(x, y, dx, dy):
+    if not level.is_loaded():
+        if load_test.hover(x, y):
+            game_window.set_mouse_cursor(cursor_hand)
+
+        else:
+            pass
+            game_window.set_mouse_cursor(cursor_normal)
+    else:
+        game_window.set_mouse_cursor(cursor_normal)
 
 
 @game_window.event
@@ -60,7 +76,7 @@ if __name__ == '__main__':
     current, supported = get_version()
     level = Level(current, supported, game_window, main_batch)
 
-    load_test = ui.Button((20, game_window.height // 2), (300, 50), "LOAD", level.load, params = "test", batch = main_batch, group = pgl.graphics.OrderedGroup(1), anchor_x = "left")
+    load_test = ui.Button((50, game_window.height // 2), "LOAD", "button_bg.png", level.load, params = "test", batch = main_batch, group = pgl.graphics.OrderedGroup(1), anchor_x = 'left')
 
     pgl.clock.schedule_interval(update, 1 / framerate)
     pgl.app.run()
