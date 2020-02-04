@@ -19,7 +19,7 @@ class Player:
         self._drag = 0.995
         self._rot_acc = 30
         self._max_rot_vel = 300
-        self._rot_drag = 0.95
+        self._rot_drag = 0.97
 
         self.vel_x = 0
         self.vel_y = 0
@@ -37,7 +37,7 @@ class Player:
         self._sprite = pgl.sprite.Sprite(img=self._image, x=self.x, y=self.y, batch=batch, group=group)
         self._sprite.scale = 0.1
 
-        self.smoke_particles = PointEmitter((self.x, self.y), direction = self.rot, max_particles = 20, size = 5, size_rand = 50, vel = 500, vel_rand = 2, rot_vel_rand = 100, spread = 50, emit_speed = 50, lifetime = 0.3, lifetime_rand= 0.4, batch = batch, group = group)
+        self.smoke_particles = PointEmitter((self.x, self.y), direction = self.rot, max_particles = 20, size = 5, size_rand = 50, vel = 300, vel_rand = 2, rot_vel_rand = 100, spread = 50, emit_speed = 50, lifetime = 0.15, lifetime_rand = 0.1, batch = batch, group = group)
         self._rects_in_range = []
 
         self._debug = False
@@ -49,6 +49,7 @@ class Player:
         self.debug_disable()
         self.hitbox.delete()
         self.smoke_particles.delete()
+        del self
 
     def update(self, dt):
         self.smoke_particles.set_intensity(max_particles = 0)

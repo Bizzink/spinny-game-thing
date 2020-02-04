@@ -81,7 +81,7 @@ class Line:
 
         return angle
 
-    def debug_enable(self, batch, group = None):
+    def debug_enable(self, batch, group=None):
         """disable debug vertex rendering"""
         self._debug = True
         self._debug_vertex = batch.add(2, pgl.gl.GL_LINES, group, (
@@ -103,6 +103,8 @@ class Line:
         if self._debug:
             self._debug_vertex.delete()
             self._debug_vertex = None
+
+        del self
 
 
 class Rect:
@@ -202,6 +204,8 @@ class Rect:
             for vertex in self._debug_vertex_list:
                 vertex.delete()
             self._debug_vertex_list = None
+
+        del self
 
     def __update_position__(self, x, y, rot):
         """move and rotate to specified position"""

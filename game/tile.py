@@ -36,6 +36,10 @@ class Tile:
         self._debug = False
         self.hitbox.debug_disable()
 
+    def delete(self):
+        self._sprite.delete()
+        del self
+
 
 class TileAll(Tile):
     def __init__(self, pos, rot, batch=None, group=None):

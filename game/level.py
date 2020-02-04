@@ -42,8 +42,7 @@ class Level:
         self._foreground = pgl.graphics.OrderedGroup(2)
         self._debug_group = pgl.graphics.OrderedGroup(3)
 
-        self.player = Player((0, 0), batch=self._batch, group=self._player_group)
-        self._window.push_handlers(self.player.key_handler)
+        self.player = None
 
         self.debug = Debug(self._batch, self._debug_group)
 
@@ -72,12 +71,14 @@ class Level:
                 raise ValueError(
                     "Level is unsupported version! ({}, supported: {})".format(data[0], self._supported_levels))
 
-            self.player.set_pos((data[1], data[2]))
+            self.player = Player((from_bin(data[1], data[2]), from_bin(data[3], data[4])), batch=self._batch, group=self._player_group)
+            self._window.push_handlers(self.player.key_handler)
+            self._data["particles"].append(self.player.smoke_particles)
 
             prev_vals = [None, None]
             temp_data = []
 
-            for val in data[3:]:
+            for val in data[5:]:
                 if val == 255 and prev_vals == [255, 255]:
                     temp_data = temp_data[:-2]
                     self.__create_element__(temp_data)
@@ -91,6 +92,8 @@ class Level:
 
             self.__debug_setup__()
 
+            self._loaded = True
+
     def save(self, filename):
         """save items in data to a file, formatted as specified in level_format.txt"""
         filename += ".dat"
@@ -100,9 +103,10 @@ class Level:
 
         else:
             if self._data["start_pos"] is None:
-                self._data["start_pos"] = [50, 50]
+                self._data["start_pos"] = [0, 200, 1, 44]
 
-            data = [self._current_version, self._data["start_pos"][0], self._data["start_pos"][1]]
+            data = [self._current_version]
+            data.extend(self._data["start_pos"])
 
             for tile in self._data["tiles"]:
                 data.append(tile.id)
@@ -115,10 +119,14 @@ class Level:
 
                 data.extend([255, 255, 255])
 
+            self._data["particles"].remove(self.player.smoke_particles)
+
             for particle in self._data["particles"]:
                 data.append(4)
-                data.extend([1, particle.x // 256, particle.x % 256])
-                data.extend([2, particle.y // 256, particle.y % 256])
+                data.append(1)
+                data.extend(to_bin(particle.x))
+                data.append(2)
+                data.extend(to_bin(particle.y))
 
                 if particle.direction != 0:
                     data.append(3)
@@ -174,9 +182,33 @@ class Level:
 
                 data.extend([255, 255, 255])
 
-            file = open("levels/{}".format(filename), "wb")
-            file.write(bytes(data))
-            file.close()
+                file = open("levels/{}".format(filename), "wb")
+                file.write(bytes(data))
+                file.close()
+
+    def unload(self):
+        if self._loaded:
+            self.player.delete()
+
+            for tile in self._data["tiles"]:
+                tile.delete()
+
+            for particle in self._data["particles"]:
+                particle.delete()
+
+            for title in self._data["titles"]:
+                title.delete()
+
+            self.player = None
+            self.version = None
+            self._gravity = 20
+            self._name = None
+            self._data = {"tiles": [],
+                          "particles": [],
+                          "titles": [],
+                          "start_pos": None}
+
+            self._loaded = False
 
     def __create_element__(self, data):
         """create a new object from the parameters in data, refer to level_format.txt for details"""
@@ -264,15 +296,11 @@ class Level:
         """add objects in self._data to debug groups"""
         self.debug.add_group(self._data["tiles"], 'tiles')
         self.debug.add_group([self.player, self.player.hitbox], 'player')
-        self.debug.add_group(self.player.smoke_particles, 'particles')
+        self.debug.add_group(self._data["particles"], 'particles')
 
-        particle_counts = [self.player.smoke_particles.get_particle_count]
+        particle_counts = [particle.get_particle_count for particle in self._data["particles"]]
 
-        for particle in self._data["particles"]:
-            particle_counts.append(particle.get_particle_count)
-
-        self.debug.dynamic_variable("Particles", particle_counts, (10, 700), size=15,
-                                    anchor_x='left')
+        self.debug.dynamic_variable("Particles", particle_counts, (10, 700), size=15, anchor_x='left')
         self.debug.dynamic_variable("Player velocity", self.player.print_velocity, (10, 680), size=15, anchor_x='left')
         self.debug.dynamic_variable("Player position", self.player.print_pos, (10, 660), size=15, anchor_x='left')
 
@@ -280,20 +308,8 @@ class Level:
         for tile in self._data["tiles"]:
             self.player.near_rect(tile.hitbox)
 
-    def __show_grid__(self):
-        # TODO: this + editor
-        pass
+    def get_data(self):
+        return self._data
 
-    def add_object(self, section, obj):
-        """add object to data"""
-        self._data[section].append(obj)
-
-    def delete_object(self, section, obj):
-        """remove object from data"""
-        obj.delete()
-        self._data[section].remove(obj)
-
-    def set_mode(self, mode):
-        if mode == "edit":
-            self.player.delete()
-            self.__show_grid__()
+    def is_loaded(self):
+        return self._loaded

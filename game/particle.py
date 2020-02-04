@@ -41,6 +41,8 @@ class Particle:
             for vertex in self._debug_vertex_list:
                 vertex.delete()
 
+        del self
+
     def update(self, dt):
         self._x += self._vel_x * dt
         self._y += self._vel_y * dt

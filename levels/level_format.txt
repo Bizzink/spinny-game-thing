@@ -6,7 +6,7 @@ all numbers apart from the first are stored as 2 byte pairs
 byte 1: level file version (compatibility check)
 bytes 2 - 5: player starting position: x, y
 
-4 and up: data section:
+6 and up: data section:
 this includes tiles, particle systems, etc.
 formatted as follows:
 

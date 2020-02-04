@@ -1,13 +1,13 @@
-from .title import Title
+import pyglet as pgl
 
 
 class DebugItem:
-    def __init__(self, class_ref, group_name = None):
+    def __init__(self, class_ref, group_name=None):
         self.class_ref = class_ref
         self.group_name = group_name
         self.debug = False
 
-    def debug_enable(self, batch, group = None):
+    def debug_enable(self, batch, group=None):
         self.debug = True
         self.class_ref.debug_enable(batch, group)
 
@@ -27,6 +27,8 @@ class Debug:
         self._batch = batch
         self._group = group
 
+        pgl.gl.glLineWidth(3)
+
     def update(self):
         """update dynamic variable values"""
         if self._show_dynamic_variables:
@@ -39,13 +41,13 @@ class Debug:
                         for item in self._dynamic_variables[name]:
                             val += item()
 
-                        self._titles[name].update_text("{}: {}".format(name, val))
+                        self._titles[name].text = "{}: {}".format(name, val)
                     else:
-                        self._titles[name].update_text("{}: {}".format(name, self._dynamic_variables[name]()))
+                        self._titles[name].text = "{}: {}".format(name, self._dynamic_variables[name]())
         else:
             if len(self._titles) > 0:
                 for name in self._titles.keys():
-                    self._titles[name].update_text("")
+                    self._titles[name].text = ""
 
     def enable(self, item):
         """enable debug for a single item"""
@@ -75,7 +77,7 @@ class Debug:
             if type(group) == list:
                 new_group = []
                 for item in group:
-                    new_group.append(DebugItem(item, group_name = name))
+                    new_group.append(DebugItem(item, group_name=name))
                 self._groups[name] = new_group
             else:
                 group = DebugItem(group, group_name=name)
@@ -172,8 +174,9 @@ class Debug:
     def dynamic_variable(self, name, getter_func, pos, size=30, anchor_x='center', anchor_y='center'):
         """create a text display for a changing variable, or list of variables to add together"""
         self._dynamic_variables[name] = getter_func
-        self._titles[name] = Title("", pos, size=size, batch=self._batch, group=self._group,
-                                   anchor_x=anchor_x, anchor_y=anchor_y)
+        self._titles[name] = pgl.text.Label(text = "", x = pos[0], y = pos[1], font_size = size, font_name = 'Ubuntu',
+                                            batch = self._batch, group = self._group, anchor_x = anchor_x,
+                                            anchor_y = anchor_y)
 
     def enable_dynamic_variables(self):
         self._show_dynamic_variables = True
