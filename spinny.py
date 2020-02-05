@@ -1,7 +1,11 @@
+from time import sleep
+
 from pyglet.window import key
 import pyglet as pgl
 from game.level import Level
 from game import ui
+
+from game.tile import Tile
 
 framerate = 60.0
 game_window = pgl.window.Window(1920, 1080)
@@ -40,12 +44,21 @@ def on_key_press(symbol, modifiers):
         if symbol == key.F3:
             level.debug.toggle_all()
 
+        if symbol == key.F2:
+            level.save("test4")
+
 
 @game_window.event
 def on_mouse_press(x, y, button, modifiers):
     if button == pgl.window.mouse.LEFT:
         if not level.is_loaded():
             load_test.click(x, y)
+
+        elif level.is_loaded():
+            tile = Tile((x, y), 0, 1, 1, batch = main_batch, group = pgl.graphics.OrderedGroup(1))
+            level._data["tiles"].append(tile)
+
+
 
 
 @game_window.event
@@ -73,10 +86,12 @@ def update(dt):
 
 
 if __name__ == '__main__':
+    # TODO: get all levels in folder and display scrolling list of them, function to call this menu whenever
     current, supported = get_version()
     level = Level(current, supported, game_window, main_batch)
 
-    load_test = ui.Button((50, game_window.height // 2), "LOAD", "button_bg.png", level.load, params = "test", batch = main_batch, group = pgl.graphics.OrderedGroup(1), anchor_x = 'left')
+    load_test = ui.Button((50, game_window.height // 2), "LOAD", "button_bg.png", level.load, params = "test4", batch = main_batch, group = pgl.graphics.OrderedGroup(1), anchor_x = 'left')
+    #load_test = ui.Button((50, game_window.height // 2), "LOAD", "button_bg.png", level.load_empty, batch = main_batch, group = pgl.graphics.OrderedGroup(1), anchor_x = 'left')
 
     pgl.clock.schedule_interval(update, 1 / framerate)
     pgl.app.run()

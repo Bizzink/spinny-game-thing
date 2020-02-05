@@ -3,11 +3,31 @@ from .rect import Rect
 
 
 class Tile:
-    def __init__(self, pos, rot, image, id_val, hitbox, batch=None, group=None):
-        self.id = id_val
+    def __init__(self, pos, rot, style_id, shape_id, colour = (255, 255, 255), outline = False, outline_colour = (255, 255, 255), hitbox = None, batch=None, group=None):
         self.x = pos[0]
         self.y = pos[1]
         self.rot = rot
+
+        self.shape = shape_id
+        self.style = style_id
+
+        self.colour = colour
+
+        self.has_outline = outline
+        self.line_colour = outline_colour
+
+        if shape_id == 1:
+            hitbox = [[-20, -20], [-20, 20], [20, 20], [20, -20]]
+        elif shape_id == 2:
+            hitbox = [[-20, 20], [-20, -20], [25, -20], [25, 20]]
+        elif shape_id == 3:
+            hitbox = [[-25, 20], [-25, -20], [25, -20], [25, 20]]
+        elif shape_id == 4:
+            hitbox = []
+        elif shape_id == 5:
+            hitbox = []
+        elif shape_id == 6:
+            hitbox = []
 
         self.hitbox = Rect(pos, hitbox)
         self.hitbox.update(self.x, self.y, self.rot)
@@ -15,7 +35,7 @@ class Tile:
         self.friction = 0.95
 
         #  sprite setup
-        self._image = pgl.resource.image(image)
+        self._image = pgl.resource.image("tile_{}_{}.png".format(self.style, self.shape))
         self._image.center_x = self._image.width // 2
         self._image.center_y = self._image.height // 2
         self._image.anchor_x = self._image.width // 2
@@ -23,6 +43,9 @@ class Tile:
         self._sprite = pgl.sprite.Sprite(img=self._image, x=self.x, y=self.y, batch=batch, group=group)
         self._sprite.rotation = self.rot
         self._sprite.scale = 0.1
+        self._sprite.color = self.colour
+
+        # TODO: outline
 
         self._debug = False
 
@@ -36,21 +59,14 @@ class Tile:
         self._debug = False
         self.hitbox.debug_disable()
 
+    def set_colour(self, colour):
+        print(colour)
+        self.colour = colour
+        self._sprite.color = colour
+
+    def set_outline_colour(self, colour):
+        self.line_colour = colour
+
     def delete(self):
         self._sprite.delete()
         del self
-
-
-class TileAll(Tile):
-    def __init__(self, pos, rot, batch=None, group=None):
-        super().__init__(pos, rot, "tile_all.png", 1, [[-20, -20], [-20, 20], [20, 20], [20, -20]], batch=batch, group=group)
-
-
-class TileEnd(Tile):
-    def __init__(self, pos, rot, batch=None, group=None):
-        super().__init__(pos, rot, "tile_end.png", 2, [[-20, 20], [-20, -20], [25, -20], [25, 20]], batch=batch, group=group)
-
-
-class TilePipe(Tile):
-    def __init__(self, pos, rot, batch=None, group=None):
-        super().__init__(pos, rot, "tile_pipe.png", 3, [[-25, 20], [-25, -20], [25, -20], [25, 20]], batch=batch, group=group)

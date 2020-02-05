@@ -1,59 +1,69 @@
 LEVEL FILE FORMAT
-files are stored in binary format:
 
-all numbers apart from the first are stored as 2 byte pairs
+pos    function                 number of bytes
 
-byte 1: level file version (compatibility check)
-bytes 2 - 5: player starting position: x, y
+0      version                  1
+1      player start pos x       2
+3      player start pos y       2
+5      level gravity            1
 
-6 and up: data section:
-this includes tiles, particle systems, etc.
-formatted as follows:
+6+     level data
 
-    object id
-    object data id + value
-    terminator
+DATA FORMATS:
 
-each object has a unique id, and its parameters have an id.
-specific parameters can be set individually
+object / parameter id    parameter               number of bytes
 
-the terminator (255, 255, 255) indicates that the next object has begun
+        0                   terminator
+====================================================================
+1                           Tile                10 - 18
+                            pos x               2
+                            pos y               2
+                            rotation (degrees)  2
+                            tile shape*          1
+                            tile style**        1
+                            has outline         1
+        1                   tile colour         3
+        2                   outline colour      3
+====================================================================
+2                           PointEmitter        7 - 47
+                            pos x               2
+                            pos y               2
+        1                   rotation (degrees)  2
+        2                   max particles       2
+        3                   emit speed          1
+        4                   spread              2
+        5                   image id***         1
+        6                   vel (x 0.1)         2
+        7                   vel rand (x0.1)     2
+        8                   rotation vel        2
+        9                   rotation vel rand   2
+        10                  size                1
+        11                  size rand (x0.1)    2
+        12                  lifetime (x0.1)     2
+        13                  lifetime rand (x0.1)2
+        14                  colour              3
+        15                  drag (x0.1)         1
+====================================================================
 
-id list:
-* = required
+Notes:
 
-id  param id    name
-0 0             terminator
+-parameters with an id are optional, they will be read until the terminator parameter id (0) is reached
+-The number of bytes per parameter indicated does not include the byte for the parameter id itself
+-When saving a level, only parameters that don't match that parameters default value are saved
 
-1               pink tile all sides
-2               pink tile end
-3               pink tile pipe
+* Tile shapes:
 
-    1           pos x *
-    2           pos y *
-    3           rotation (degrees) *
+id      description
+1       all sides
+2       end cap
+3       pipe
+4       L corner piece
+5       T intersection
+6       + intersection
 
-4               particle point emitter
+** Tile styles:
+in the resources folder, there will be images for tiles with various numbered styles
 
-    1           pos x *
-    2           pos y *
-    3           direction (degrees)
-    4           spread (degrees)
-    5           max particles
-    6           emit speed
-    7           particle lifetime (10th of a second)
-    8           particle lifetime rand (10th of a second)
-    9           particle size
-    10          particle size rand (100th of a size)
-    11          particle velocity
-    12          particle velocity rand
-    13          particle rotation velocity
-    14          particle rotation velocity rand
-    15          particle drag
-
-5               title (unimplemented)
-
-
-
-
+*** Particle image id:
+similar to tile styles
 

@@ -5,7 +5,7 @@ import pyglet as pgl
 
 
 class Particle:
-    def __init__(self, pos, rot_vel, vel, drag, lifetime, image, size, batch=None, group=None):
+    def __init__(self, pos, rot_vel, vel, drag, lifetime, image, size, colour = (255, 255, 255), batch=None, group=None):
         self._x = pos[0]
         self._y = pos[1]
         self.rot = 0
@@ -25,6 +25,7 @@ class Particle:
         self._image.anchor_y = self._image.height // 2
         self._sprite = pgl.sprite.Sprite(img=self._image, x=self._x, y=self._y, batch=batch, group=group)
         self._sprite.scale = size / 10
+        self._sprite.color = colour
 
         # debug stuff
         self.debug = False
@@ -89,7 +90,7 @@ class Particle:
 
 
 class PointEmitter:
-    def __init__(self, pos, max_particles = 10, emit_speed = 1, direction = 0, rot_vel = 0, rot_vel_rand = 0, spread = 360, vel = 10, vel_rand = 0, image = "square.png", size = 10, size_rand = 0, drag = 1, lifetime = 1, lifetime_rand = 0, batch = None, group = None):
+    def __init__(self, pos, direction = 0, max_particles = 10, emit_speed = 1, spread = 360, image_id = 1, vel = 10, vel_rand = 0, rot_vel = 0, rot_vel_rand = 0, size = 10, size_rand = 0, lifetime = 1, lifetime_rand = 0, colour = (255, 255, 255), drag = 1, batch = None, group = None):
         """rotation related items are in degrees! - rot_vel, rot_vel_rand, direction, spread"""
         # emitter parameters
         self.x = pos[0]
@@ -109,9 +110,11 @@ class PointEmitter:
         self.particle_size = size
         self.particle_size_rand = size_rand
         self.particle_drag = drag
-        self.particle_image = image
+        self.particle_image_id = image_id
+        self.particle_image = "particle_{}.png".format(image_id)
         self.particle_lifetime = lifetime
         self.particle_lifetime_rand = lifetime_rand
+        self.particle_colour = colour
 
         # other
         self._debug = False
@@ -157,7 +160,7 @@ class PointEmitter:
         size = self.particle_size / 10
         if self.particle_size_rand != 0: size += randrange(-self.particle_size_rand // 2, self.particle_size_rand // 2) / 100
 
-        particle = Particle((self.x, self.y), rot_vel, direction, self.particle_drag, lifetime, self.particle_image, size, self._batch, self._group)
+        particle = Particle((self.x, self.y), rot_vel, direction, self.particle_drag, lifetime, self.particle_image, size, self.particle_colour, self._batch, self._group)
 
         return particle
 
@@ -180,7 +183,7 @@ class PointEmitter:
                                                    self.x + (cos(self.direction * pi / 180) * self.particle_vel * self.particle_lifetime),
                                                    self.y + (sin(self.direction * pi / 180) * -self.particle_vel * self.particle_lifetime)]
 
-    def set_intensity(self, vel = None, vel_rand = None, rot_vel = None, rot_vel_rand = None, emit_speed = None, size = None, size_rand = None, spread = None, max_particles = None, lifetime = None, lifetime_rand = None, drag = None):
+    def set_intensity(self, vel = None, vel_rand = None, rot_vel = None, rot_vel_rand = None, emit_speed = None, size = None, size_rand = None, spread = None, max_particles = None, lifetime = None, lifetime_rand = None, colour = None, drag = None):
         """change parameters related to intensity of particles emitted"""
         # emitter parameters
         if max_particles is not None: self.max_particles = max_particles
@@ -197,6 +200,7 @@ class PointEmitter:
         if lifetime is not None: self.particle_lifetime = lifetime
         if lifetime_rand is not None: self.particle_lifetime_rand = lifetime_rand
         if drag is not None: self.particle_drag = drag
+        if colour is not None: self.particle_colour = colour
 
     def debug_enable(self, batch, group = None):
         """enable drawing of direction vector, spread cone of emitter"""
