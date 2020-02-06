@@ -3,7 +3,7 @@ from .rect import Rect
 
 
 class Tile:
-    def __init__(self, pos, rot, style_id, shape_id, colour = (255, 255, 255), outline = False, outline_colour = (255, 255, 255), hitbox = None, batch=None, group=None):
+    def __init__(self, pos, rot, style_id, shape_id, colour = (255, 255, 255), outline = False, outline_colour = (255, 255, 255), batch=None, group=None):
         self.x = pos[0]
         self.y = pos[1]
         self.rot = rot
@@ -14,7 +14,7 @@ class Tile:
         self.colour = colour
 
         self.has_outline = outline
-        self.line_colour = outline_colour
+        self.outline_colour = outline_colour
 
         if shape_id == 1:
             hitbox = [[-20, -20], [-20, 20], [20, 20], [20, -20]]
@@ -46,6 +46,7 @@ class Tile:
         self._sprite.color = self.colour
 
         # TODO: outline
+        self._outline_image = None
 
         self._debug = False
 
@@ -59,13 +60,24 @@ class Tile:
         self._debug = False
         self.hitbox.debug_disable()
 
+    def set_rot(self, angle):
+        self.rot = angle
+
     def set_colour(self, colour):
         print(colour)
         self.colour = colour
         self._sprite.color = colour
 
     def set_outline_colour(self, colour):
-        self.line_colour = colour
+        self.outline_colour = colour
+
+    def enable_outline(self):
+        self.has_outline = True
+        self._outline_image = None
+
+    def disable_outline(self):
+        self.has_outline = False
+        self._outline_image = None
 
     def delete(self):
         self._sprite.delete()

@@ -1,5 +1,3 @@
-from time import sleep
-
 from pyglet.window import key
 import pyglet as pgl
 from game.level import Level
@@ -57,8 +55,6 @@ def on_mouse_press(x, y, button, modifiers):
         elif level.is_loaded():
             tile = Tile((x, y), 0, 1, 1, batch = main_batch, group = pgl.graphics.OrderedGroup(1))
             level._data["tiles"].append(tile)
-
-
 
 
 @game_window.event

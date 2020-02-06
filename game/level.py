@@ -30,6 +30,7 @@ class Level:
         self._loaded = False
         self._data = {"tiles": [],
                       "particles": [],
+                      # TODO: implement titles
                       "titles": [],
                       "start_pos": None,
                       "gravity": 20}
@@ -136,11 +137,11 @@ class Level:
 
         self._loaded = True
 
-    def save(self, filename):
+    def save(self, filename, override = False):
         """save items in data to a file, formatted as specified in level_format.txt"""
         filename += ".dat"
 
-        if os.path.isfile('levels/{}'.format(filename)):
+        if not override and os.path.isfile('levels/{}'.format(filename)):
             raise FileExistsError("File {} already exists!".format(filename))
 
         else:
@@ -376,12 +377,33 @@ class Level:
         self.debug.dynamic_variable("Player position", self.player.print_pos, (10, self._window.height - 60), size=15,
                                     anchor_x='left')
 
-        """===================================================TEMPORARY==================================================="""
+        # TODO: make this into a proper mechanic
         for tile in self._data["tiles"]:
             self.player.near_rect(tile.hitbox)
 
     def get_data(self):
         return self._data
+
+    def set_data(self, new_data, mode = "override"):
+        """override or add data to level data"""
+        if mode == "override":
+            self._data = new_data
+
+        elif mode == "merge":
+            # Add elements that aren't already in data
+            for tile in new_data["tiles"]:
+                if tile not in self._data["tiles"]:
+                    self._data["tiles"].append(tile)
+
+            for particle in new_data["particles"]:
+                if particle not in self._data["particles"]:
+                    self._data["particles"].append(particle)
+
+            if self._data["start_pos"] is None:
+                self._data["start_pos"] = new_data["start_pos"]
+
+        else:
+            raise ValueError("Mode '{}' is invalid! (should be 'override' or 'merge')".format(mode))
 
     def is_loaded(self):
         return self._loaded
